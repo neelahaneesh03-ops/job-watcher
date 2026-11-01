@@ -166,6 +166,7 @@ NO_SPONSOR = re.compile(
     r"|requires?\s+(u\.?\s?s\.?|united\s+states)\s+citizenship"
     r"|green\s+card\s+holders?\s+only|citizens?\s+(or|and)\s+(green\s+card|permanent\s+resident)"
     r"|(active|current|ability\s+to\s+(obtain|maintain)|eligib\w+\s+(to|for))\s+[^.]{0,30}(security\s+)?clearance"
+    r"|citizen\s*/\s*visa\s+only"
     r"|\bitar\b|\bu\.?\s?s\.?\s+persons?\b", re.I)
 SPONSOR_FRIENDLY = re.compile(
     r"\bh-?1b\b|visa\s+sponsorship\s+(is\s+)?(available|provided|offered)"
@@ -179,9 +180,15 @@ YEARS = re.compile(
     rf"(?:\s+of)?[^.;\n]{{0,60}}?(experience|exp\b|industry|professional|work)", re.I)
 
 
+LABEL_YEARS = re.compile(r"\bexperience\s*[:\-]?\s*(\d{1,2})\s*\+?\s*(?:-\s*\d{1,2}\s*)?years?", re.I)
+YC_ANY_EXP = re.compile(r"\bexperience\s*[:\-]?\s*(any|new grads? ok|0\s*-\s*1)", re.I)
+
+
 def min_years(text):
     """Smallest number of years of experience the posting mentions, or None."""
-    vals = []
+    if YC_ANY_EXP.search(text):
+        return 0
+    vals = [int(m.group(1)) for m in LABEL_YEARS.finditer(text)]
     for m in YEARS.finditer(text):
         a = m.group(1).lower()
         n = WORDNUM.get(a) if not a.isdigit() else int(a)
