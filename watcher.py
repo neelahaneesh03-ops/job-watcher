@@ -176,6 +176,14 @@ def linkedin_jobs():
                     params={"keywords": q, "location": c["location"],
                             "f_TPR": f"r{c['window_seconds']}", "start": start})
             if not r or not r.text.strip():
+                if start == 0 and q == c["queries"][0]:
+                    try:
+                        raw = session.get("https://www.linkedin.com/jobs-api/seeMoreJobPostings/search",
+                                          params={"keywords": q, "location": c["location"],
+                                                  "f_TPR": f"r{c['window_seconds']}"}, timeout=20)
+                        log(f"LinkedIn debug: status {raw.status_code}, {len(raw.text)} bytes")
+                    except requests.RequestException as e:
+                        log(f"LinkedIn debug: {e}")
                 break
             page = parse_linkedin(r.text)
             if not page:
@@ -479,6 +487,21 @@ def append_log(jobs):
                         j["url"]])
 
 
+def write_open_yc(yc):
+    """Every currently open YC job that matches your filters, best gems first."""
+    rows = [j for j in yc if title_ok(j["title"]) and loc_ok(j.get("location", ""))]
+    rows.sort(key=lambda j: j.get("posted_at") or "", reverse=True)
+    rows.sort(key=lambda j: -j.get("gem_score", 0))
+    with open(os.path.join(STATE, "open_yc_jobs.csv"), "w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["gem", "company", "yc_batch", "team_size", "title", "location", "posted", "apply_url", "what_they_do"])
+        for j in rows:
+            w.writerow(["⭐" if j.get("gem") else "", j["company"], j.get("yc_batch", ""), j.get("team_size") or "",
+                        j["title"], j.get("location", ""), (j.get("posted_at") or "")[:10], j["url"],
+                        j.get("one_liner", "")])
+    log(f"Wrote {len(rows)} matching open YC jobs to state/open_yc_jobs.csv")
+
+
 # ---------------------------------------------------------------- main
 def main():
     seen = load_json("seen.json", {})
@@ -519,6 +542,7 @@ def main():
 
     matches = [j for j in new if title_ok(j["title"]) and loc_ok(j.get("location", ""))]
     append_log(matches)
+    write_open_yc(yc)
 
     if first_run:
         subj = "Job watcher is live"
