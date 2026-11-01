@@ -1,39 +1,37 @@
 # Job watcher settings. Edit this file on GitHub to change what you get emailed.
 
 [roles]
-# A job is kept if its TITLE matches include_regex and does NOT match exclude_regex (case-insensitive).
-include_regex = '''\b(machine learning|ml|ai|artificial intelligence|deep learning|computer vision|vision|perception|robotics?|autonomy|software engineer(ing)?|software developer|swe|backend|back[- ]end|full[- ]?stack|founding engineer|member of technical staff|applied scientist|research engineer|ml ?ops|inference|llm|data scientist|platform engineer)\b'''
-exclude_regex = '''((?<!technical )\bstaff\b|\bprincipal\b|\bdirector\b|\bmanager\b|\bhead of\b|\bvp\b|vice president|\bdistinguished\b|\bintern(ship)?\b|\bsales\b|\bmarketing\b|\brecruit|\baccount executive\b|\bsolutions? engineer\b|\bsupport\b)'''
+# Kept if the TITLE matches include_regex and does NOT match exclude_regex (case-insensitive).
+include_regex = '''\b(machine learning|ml|ai|artificial intelligence|deep learning|computer vision|vision|perception|robotics?|autonomy|software engineer(ing)?|software developer|swe|backend|back[- ]end|full[- ]?stack|founding engineer|member of technical staff|applied scientist|research engineer|ml ?ops|inference|llm|data scientist|platform engineer|new grad|university grad)\b'''
+# Senior-level titles are dropped because you want roles needing under 3 years.
+exclude_regex = '''((?<!technical )\bstaff\b|\bprincipal\b|\bdirector\b|\bmanager\b|\bhead of\b|\bvp\b|vice president|\bdistinguished\b|\bintern(ship)?\b|\bco-?op\b|\bsales\b|\bmarketing\b|\brecruit|\baccount executive\b|\bsolutions? engineer\b|\bsupport\b|\bsenior\b|\bsr\.?\b|\blead\b|\barchitect\b|\b(iii|iv|v)\b|\bL[5-9]\b|\bfellow\b)'''
+
+[experience]
+# Reads each new job's description. Drops it if the SMALLEST "N+ years" it asks for is above this.
+# You have 3 years at Accenture + an MS, so 3 is also reasonable here.
+max_required_years = 2
+
+[sponsorship]
+# Drop jobs whose description rules out visa sponsorship / requires citizenship or clearance.
+drop_no_sponsorship = true
 
 [location]
-# Drop jobs whose every listed location is clearly outside the US. Empty / "Remote" locations are kept.
 allow_non_us = false
 
-[linkedin]
-# Searches LinkedIn's public job search for postings from the last `window_seconds`.
-# Covers most big companies, including everyone in companies.csv (matches are flagged).
-enabled = true
-location = "United States"
-window_seconds = 3600          # 3600 = past hour. Use 7200 if you run every 2 hours.
-max_pages = 4                  # 25 results per page
-queries = [
-  "machine learning engineer",
-  "software engineer",
-  "computer vision engineer",
-  "AI engineer",
-  "robotics software engineer",
-  "applied scientist",
-]
+[sources]
+simplify_new_grad = true      # SimplifyJobs New-Grad-Positions (curated new-grad list, big tech included)
+job_board_directory = true    # ~12k company boards on Greenhouse / Ashby / Lever / Workday
+yc = true                     # every hiring YC company (finds their job board automatically)
+workday_every_n_runs = 2      # Workday is slow; check it every 2nd run (every 2 hours)
+workday_queries = ["software engineer", "machine learning"]
+
 
 [yc]
-# Checks every currently-hiring YC company directly on its own job board.
-enabled = true
 regions = ["United States of America", "America / Canada", "Remote", "Fully Remote"]
-rediscover_days = 7            # how often to re-detect which job board each company uses
-check_yc_page_for_unknown = true   # fall back to the company's ycombinator.com/jobs page
+rediscover_days = 7
+check_yc_page_for_unknown = true
 
 [gems]
-# YC companies scoring >= min_score get a star as a "hidden gem".
 interest_tags = ["AI", "Machine Learning", "Generative AI", "Computer Vision", "Robotics",
                  "Hard Tech", "Biotech", "Drug Discovery", "Healthcare", "Health Tech",
                  "Autonomous Vehicles", "Drones", "Hardware", "Infrastructure", "Developer Tools"]
@@ -42,6 +40,5 @@ recent_batch_year = 2024
 min_score = 3
 
 [notify]
-# Secrets (GMAIL_USER, GMAIL_APP_PASSWORD, TO_EMAIL, NTFY_TOPIC) are set in GitHub > Settings > Secrets.
 send_when_empty = false
-max_jobs_per_email = 150
+max_jobs_per_email = 100
