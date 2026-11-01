@@ -1,0 +1,501 @@
+company,industry,career_url
+Walmart,Retail,https://careers.walmart.com
+Amazon,Technology/E-Commerce,https://www.amazon.jobs
+Apple,Technology,https://www.apple.com/careers
+UnitedHealth Group,Healthcare,https://careers.unitedhealthgroup.com
+Berkshire Hathaway,Conglomerate,https://www.berkshirehathaway.com/jobs/jobsmain.html
+CVS Health,Healthcare/Retail,https://jobs.cvshealth.com
+ExxonMobil,Energy,https://jobs.exxonmobil.com
+Alphabet (Google),Technology,https://careers.google.com
+McKesson,Healthcare Distribution,https://careers.mckesson.com
+Cigna,Healthcare,https://jobs.cigna.com
+AT&T,Telecommunications,https://www.att.jobs
+Microsoft,Technology,https://careers.microsoft.com
+Chevron,Energy,https://careers.chevron.com
+Costco,Retail,https://www.costco.com/jobs.html
+Ford Motor,Automotive,https://careers.ford.com
+JPMorgan Chase,Finance,https://careers.jpmorgan.com
+General Motors,Automotive,https://careers.gm.com
+Comcast,Media/Telecom,https://jobs.comcast.com
+AmerisourceBergen,Healthcare Distribution,https://www.amerisourcebergen.com/careers
+Kroger,Retail/Grocery,https://jobs.kroger.com
+Meta,Technology,https://www.metacareers.com
+Walgreens Boots Alliance,Healthcare/Retail,https://jobs.walgreens.com
+Cardinal Health,Healthcare Distribution,https://jobs.cardinalhealth.com
+Verizon,Telecommunications,https://www.verizon.com/about/careers
+Bank of America,Finance,https://careers.bankofamerica.com
+Johnson & Johnson,Healthcare,https://jobs.jnj.com
+Fannie Mae,Finance,https://www.fanniemae.com/careers
+Lowe's,Retail/Home Improvement,https://careers.lowes.com
+Home Depot,Retail/Home Improvement,https://careers.homedepot.com
+Target,Retail,https://corporate.target.com/careers
+Wells Fargo,Finance,https://www.wellsfargo.com/about/careers
+Boeing,Aerospace/Defense,https://jobs.boeing.com
+Pfizer,Pharmaceuticals,https://www.pfizer.com/careers
+UPS,Logistics,https://www.jobs-ups.com
+FedEx,Logistics,https://careers.fedex.com
+Raytheon Technologies,Aerospace/Defense,https://careers.rtx.com
+Goldman Sachs,Finance,https://www.goldmansachs.com/careers
+Morgan Stanley,Finance,https://www.morganstanley.com/careers
+Citigroup,Finance,https://jobs.citi.com
+Intel,Technology/Semiconductors,https://jobs.intel.com
+IBM,Technology,https://www.ibm.com/employment
+Lockheed Martin,Aerospace/Defense,https://www.lockheedmartinjobs.com
+Dell Technologies,Technology,https://jobs.dell.com
+Oracle,Technology,https://careers.oracle.com
+Salesforce,Technology,https://www.salesforce.com/company/careers
+Adobe,Technology,https://www.adobe.com/careers
+Netflix,Media/Streaming,https://jobs.netflix.com
+PayPal,Fintech,https://careers.pypl.com
+Uber,Technology/Mobility,https://www.uber.com/us/en/careers
+Lyft,Technology/Mobility,https://www.lyft.com/careers
+Airbnb,Technology/Hospitality,https://careers.airbnb.com
+Stripe,Fintech,https://stripe.com/jobs
+Nvidia,Technology/Semiconductors,https://www.nvidia.com/en-us/about-nvidia/careers
+AMD,Technology/Semiconductors,https://careers.amd.com
+Qualcomm,Technology/Semiconductors,https://www.qualcomm.com/company/careers
+Texas Instruments,Technology/Semiconductors,https://careers.ti.com
+Cisco,Technology/Networking,https://jobs.cisco.com
+Honeywell,Industrials,https://careers.honeywell.com
+3M,Industrials,https://www.3m.com/3M/en_US/careers-us
+Caterpillar,Industrials,https://careers.caterpillar.com
+Deere & Company,Industrials/Agriculture,https://jobs.deere.com
+General Electric,Industrials,https://jobs.gecareers.com
+Emerson Electric,Industrials,https://www.emerson.com/en-us/careers
+Parker Hannifin,Industrials,https://careers.parker.com
+Northrop Grumman,Aerospace/Defense,https://www.northropgrumman.com/careers
+General Dynamics,Aerospace/Defense,https://www.gd.com/careers
+Humana,Healthcare,https://careers.humana.com
+Elevance Health (Anthem),Healthcare,https://careers.elevancehealth.com
+Aetna,Healthcare,https://jobs.aetna.com
+MetLife,Insurance,https://jobs.metlife.com
+Prudential Financial,Finance/Insurance,https://jobs.prudential.com
+Allstate,Insurance,https://jobs.allstate.com
+Progressive,Insurance,https://progressive.com/careers
+Travelers,Insurance,https://jobs.travelers.com
+Hartford Financial,Insurance,https://jobs.thehartford.com
+American Express,Finance,https://jobs.americanexpress.com
+Capital One,Finance,https://www.capitalonecareers.com
+Discover Financial,Finance,https://jobs.discover.com
+US Bancorp,Finance,https://careers.usbank.com
+PNC Financial,Finance,https://careers.pnc.com
+Charles Schwab,Finance,https://www.schwab.com/careers
+Fidelity Investments,Finance,https://jobs.fidelity.com
+BlackRock,Finance,https://careers.blackrock.com
+Vanguard,Finance,https://www.vanguard.com/web/portal/mycm/careers
+State Street,Finance,https://careers.statestreet.com
+T. Rowe Price,Finance,https://careers.troweprice.com
+Mastercard,Fintech,https://careers.mastercard.com
+Visa,Fintech,https://usa.visa.com/careers
+Intuit,Technology/Fintech,https://careers.intuit.com
+ServiceNow,Technology,https://careers.servicenow.com
+Workday,Technology,https://www.workday.com/en-us/company/careers
+Twilio,Technology,https://www.twilio.com/en-us/company/jobs
+Snowflake,Technology,https://careers.snowflake.com
+Palantir,Technology,https://www.palantir.com/careers
+Databricks,Technology,https://www.databricks.com/company/careers
+MongoDB,Technology,https://www.mongodb.com/careers
+Atlassian,Technology,https://www.atlassian.com/company/careers
+Zendesk,Technology,https://jobs.zendesk.com
+HubSpot,Technology,https://www.hubspot.com/jobs
+Shopify,Technology/E-Commerce,https://www.shopify.com/careers
+Spotify,Technology/Media,https://www.lifeatspotify.com
+Twitter/X,Technology/Media,https://careers.x.com
+LinkedIn,Technology,https://careers.linkedin.com
+Snap,Technology/Media,https://careers.snap.com
+Pinterest,Technology/Media,https://www.pinterestcareers.com
+Dropbox,Technology,https://jobs.dropbox.com
+Box,Technology,https://jobs.box.com
+Zoom,Technology,https://careers.zoom.us
+Slack,Technology,https://slack.com/careers
+Okta,Technology/Security,https://www.okta.com/company/careers
+CrowdStrike,Technology/Security,https://www.crowdstrike.com/careers
+Palo Alto Networks,Technology/Security,https://jobs.paloaltonetworks.com
+Fortinet,Technology/Security,https://www.fortinet.com/corporate/careers
+Splunk,Technology,https://www.splunk.com/en_us/careers
+Dynatrace,Technology,https://careers.dynatrace.com
+New Relic,Technology,https://newrelic.com/about/careers
+Elastic,Technology,https://www.elastic.co/about/careers
+HashiCorp,Technology,https://www.hashicorp.com/jobs
+GitHub,Technology,https://github.com/about/careers
+GitLab,Technology,https://about.gitlab.com/jobs
+Procter & Gamble,Consumer Goods,https://www.pgcareers.com
+Unilever,Consumer Goods,https://careers.unilever.com
+Colgate-Palmolive,Consumer Goods,https://jobs.colgate.com
+Kimberly-Clark,Consumer Goods,https://jobs.kimberly-clark.com
+Kellanova,Consumer Goods/Food,https://careers.kellanova.com
+General Mills,Consumer Goods/Food,https://careers.generalmills.com
+Campbell Soup,Consumer Goods/Food,https://www.campbellsoupcompany.com/careers
+Conagra Brands,Consumer Goods/Food,https://careers.conagrabrands.com
+Mondelez,Consumer Goods/Food,https://careers.mondelezinternational.com
+Hershey,Consumer Goods/Food,https://www.thehersheycompany.com/en_us/careers
+Tyson Foods,Consumer Goods/Food,https://www.tysonfoods.com/careers
+Hormel Foods,Consumer Goods/Food,https://careers.hormelfoods.com
+Sysco,Food Distribution,https://careers.sysco.com
+US Foods,Food Distribution,https://careers.usfoods.com
+Aramark,Food Services,https://careers.aramark.com
+Sodexo,Food Services,https://us.sodexo.com/careers
+Marriott,Hospitality,https://jobs.marriott.com
+Hilton,Hospitality,https://jobs.hilton.com
+Hyatt,Hospitality,https://careers.hyatt.com
+Wyndham,Hospitality,https://careers.wyndhamhotels.com
+MGM Resorts,Hospitality/Gaming,https://careers.mgmresorts.com
+Caesars Entertainment,Hospitality/Gaming,https://careers.caesars.com
+Disney,Media/Entertainment,https://jobs.disneycareers.com
+Warner Bros Discovery,Media/Entertainment,https://careers.warnerbroscareers.com
+Paramount,Media/Entertainment,https://www.paramount.com/careers
+NBCUniversal,Media/Entertainment,https://www.nbcunicareers.com
+Fox Corporation,Media/Entertainment,https://www.foxcorporation.com/careers
+Charter Communications,Telecom/Media,https://jobs.spectrum.com
+T-Mobile,Telecommunications,https://careers.t-mobile.com
+Dish Network,Telecom/Media,https://careers.dish.com
+DirecTV,Telecom/Media,https://www.directv.com/careers
+Best Buy,Retail/Electronics,https://jobs.bestbuy.com
+Nordstrom,Retail,https://careers.nordstrom.com
+Macy's,Retail,https://jobs.macys.com
+Gap,Retail/Apparel,https://www.gapinc.com/en-us/articles/careers
+Nike,Retail/Apparel,https://jobs.nike.com
+Under Armour,Retail/Apparel,https://careers.underarmour.com
+Hasbro,Consumer Goods/Toys,https://careers.hasbro.com
+Mattel,Consumer Goods/Toys,https://jobs.mattel.com
+AutoNation,Automotive Retail,https://careers.autonation.com
+CarMax,Automotive Retail,https://jobs.carmax.com
+AutoZone,Automotive Retail,https://careers.autozone.com
+O'Reilly Auto Parts,Automotive Retail,https://www.oreillyauto.com/careers
+Advance Auto Parts,Automotive Retail,https://jobs.advanceautoparts.com
+Penske Automotive,Automotive Retail,https://www.penskeautomotive.com/careers
+Lithia Motors,Automotive Retail,https://www.lithia.com/careers
+Carvana,Automotive/E-Commerce,https://careers.carvana.com
+Hertz,Car Rental,https://jobs.hertz.com
+Avis Budget,Car Rental,https://careers.avisbudgetgroup.com
+Dollar General,Retail,https://careers.dollargeneral.com
+Dollar Tree,Retail,https://www.dollartree.com/careers
+Family Dollar,Retail,https://www.familydollar.com/careers
+Ross Stores,Retail,https://jobs.rossstores.com
+TJX Companies,Retail,https://careers.tjx.com
+Burlington,Retail,https://jobs.burlington.com
+Five Below,Retail,https://www.fivebelow.com/about/careers
+Starbucks,Food & Beverage,https://www.starbucks.com/careers
+McDonald's,Food & Beverage,https://corporate.mcdonalds.com/corpmcd/en-us/our-stories/article/careers.html
+Yum Brands,Food & Beverage,https://www.yum.com/wps/portal/yumbrands/Yumbrands/careers
+Restaurant Brands International,Food & Beverage,https://careers.rbi.com
+Darden Restaurants,Food & Beverage,https://jobs.darden.com
+Chipotle,Food & Beverage,https://jobs.chipotle.com
+Domino's,Food & Beverage,https://jobs.dominos.com
+Dunkin' Brands,Food & Beverage,https://careers.dunkinbrands.com
+Panera Bread,Food & Beverage,https://www.panerabread.com/en-us/articles/careers
+Waste Management,Environmental Services,https://careers.wm.com
+Republic Services,Environmental Services,https://careers.republicservices.com
+Clean Harbors,Environmental Services,https://www.cleanharbors.com/careers
+Jacobs Engineering,Engineering/Construction,https://careers.jacobs.com
+AECOM,Engineering/Construction,https://aecom.jobs
+KBR,Engineering/Construction,https://careers.kbr.com
+Fluor,Engineering/Construction,https://careers.fluor.com
+Bechtel,Engineering/Construction,https://www.bechtel.com/careers
+Turner Construction,Engineering/Construction,https://www.turnerconstruction.com/careers
+Lennar,Real Estate/Construction,https://careers.lennar.com
+D.R. Horton,Real Estate/Construction,https://www.drhorton.com/about/careers
+PulteGroup,Real Estate/Construction,https://www.pultegroupinc.com/careers
+Toll Brothers,Real Estate/Construction,https://www.tollbrothers.com/careers
+CBRE,Real Estate Services,https://careers.cbre.com
+Jones Lang LaSalle (JLL),Real Estate Services,https://careers.jll.com
+Simon Property Group,Real Estate,https://www.simon.com/careers
+Prologis,Real Estate/Logistics,https://www.prologis.com/careers
+Equity Residential,Real Estate,https://www.equityapartments.com/careers
+AvalonBay Communities,Real Estate,https://www.avaloncommunities.com/careers
+Public Storage,Real Estate/Storage,https://www.publicstorage.com/careers
+Duke Energy,Utilities/Energy,https://careers.duke-energy.com
+NextEra Energy,Utilities/Energy,https://www.nexteraenergy.com/careers
+Dominion Energy,Utilities/Energy,https://careers.dominionenergy.com
+Southern Company,Utilities/Energy,https://southerncompany.jobs
+Exelon,Utilities/Energy,https://jobs.exeloncorp.com
+American Electric Power,Utilities/Energy,https://careers.aep.com
+Entergy,Utilities/Energy,https://jobs.entergy.com
+Edison International,Utilities/Energy,https://www.edisoncareers.com
+Consolidated Edison,Utilities/Energy,https://careers.coned.com
+Sempra Energy,Utilities/Energy,https://www.sempra.com/careers
+Xcel Energy,Utilities/Energy,https://www.xcelenergy.com/company/careers
+WEC Energy Group,Utilities/Energy,https://www.wecenergygroup.com/careers
+Ameren,Utilities/Energy,https://www.ameren.com/careers
+Eversource Energy,Utilities/Energy,https://jobs.eversource.com
+Atmos Energy,Utilities/Energy,https://www.atmosenergy.com/careers
+CenterPoint Energy,Utilities/Energy,https://careers.centerpointenergy.com
+NiSource,Utilities/Energy,https://careers.nisource.com
+Evergy,Utilities/Energy,https://www.evergy.com/careers
+IDACORP,Utilities/Energy,https://www.idacorpcareers.com
+Pinnacle West Capital,Utilities/Energy,https://www.pinnaclewestcareers.com
+Johnson Controls,Industrials/Tech,https://www.johnsoncontrols.com/careers
+Eaton,Industrials,https://www.eaton.com/us/en-us/company/careers.html
+Rockwell Automation,Industrials/Tech,https://www.rockwellautomation.com/en-us/company/careers.html
+Illinois Tool Works,Industrials,https://www.itw.com/careers
+Dover Corporation,Industrials,https://www.dovercorporation.com/careers
+Roper Technologies,Industrials/Tech,https://www.ropertech.com/careers
+AMETEK,Industrials,https://www.ametek.com/careers
+Xylem,Industrials/Water,https://www.xylem.com/en-us/careers
+Pentair,Industrials/Water,https://www.pentair.com/en/about/careers.html
+Watts Water Technologies,Industrials/Water,https://www.watts.com/careers
+Masco,Consumer Products/Home,https://www.masco.com/careers
+Fortune Brands,Consumer Products/Home,https://www.fortunebrands.com/careers
+Stanley Black & Decker,Industrials/Tools,https://www.stanleyblackanddecker.com/careers
+Snap-on,Industrials/Tools,https://www.snapon.com/careers
+Leggett & Platt,Industrials,https://careers.leggett.com
+Mohawk Industries,Consumer Products/Flooring,https://jobs.mohawkind.com
+Interface,Consumer Products/Flooring,https://www.interface.com/US/en-US/about/careers
+Whirlpool,Consumer Appliances,https://careers.whirlpool.com
+Electrolux,Consumer Appliances,https://careers.electrolux.com
+Newell Brands,Consumer Products,https://careers.newellbrands.com
+Church & Dwight,Consumer Products,https://careers.churchdwight.com
+Energizer Holdings,Consumer Products,https://www.energizer.com/company/careers
+Spectrum Brands,Consumer Products,https://www.spectrumbrands.com/careers
+Prestige Consumer Healthcare,Healthcare/Consumer,https://careers.prestigebrands.com
+Revlon,Consumer Cosmetics,https://www.revlon.com/careers
+Estee Lauder,Consumer Cosmetics,https://www.elcompanies.com/en/careers
+Coty,Consumer Cosmetics,https://www.coty.com/careers
+Ulta Beauty,Retail/Beauty,https://www.ulta.com/careers
+Sally Beauty,Retail/Beauty,https://careers.sallybeauty.com
+Sephora,Retail/Beauty,https://www.sephora.com/careers
+Bath & Body Works,Retail/Personal Care,https://careers.bathandbodyworks.com
+Victoria's Secret,Retail/Apparel,https://careers.victoriassecret.com
+L Brands,Retail/Apparel,https://careers.lb.com
+PVH Corp,Retail/Apparel,https://careers.pvh.com
+Tapestry,Retail/Apparel,https://careers.tapestry.com
+Capri Holdings,Retail/Apparel,https://careers.capriholdings.com
+Ralph Lauren,Retail/Apparel,https://careers.ralphlauren.com
+Hanesbrands,Consumer Apparel,https://careers.hanesbrand.com
+Carter's,Consumer Apparel,https://careers.carters.com
+Oxford Industries,Consumer Apparel,https://www.oxfordindustriesinc.com/careers
+VF Corporation,Consumer Apparel,https://careers.vfc.com
+Columbia Sportswear,Consumer Apparel,https://www.columbiasportswear.com/careers
+Skechers,Consumer Footwear,https://www.skechers.com/company/careers
+Wolverine World Wide,Consumer Footwear,https://www.wolverineworldwide.com/careers
+Deckers Outdoor,Consumer Footwear,https://www.deckers.com/careers
+Steve Madden,Consumer Footwear,https://www.stevemadden.com/pages/careers
+Caleres,Consumer Footwear,https://www.caleres.com/careers
+Foot Locker,Retail/Footwear,https://www.footlocker-inc.com/careers
+Genesco,Retail/Footwear,https://www.genesco.com/careers
+Signet Jewelers,Retail/Jewelry,https://www.signetjewelers.com/careers
+Tiffany & Co. (LVMH),Retail/Luxury,https://www.tiffany.com/careers
+Fossil Group,Consumer Accessories,https://careers.fossilgroup.com
+Movado Group,Consumer Accessories,https://careers.movado.com
+Vera Bradley,Consumer Accessories,https://www.verabradley.com/pages/careers
+Duluth Trading,Retail/Apparel,https://www.duluthtrading.com/careers
+Abercrombie & Fitch,Retail/Apparel,https://corporate.abercrombie.com/careers
+American Eagle Outfitters,Retail/Apparel,https://www.ae.com/us/en/content/jobs/overview
+Urban Outfitters,Retail/Apparel,https://careers.urbn.com
+Express,Retail/Apparel,https://www.express.com/service/careers
+Chico's FAS,Retail/Apparel,https://careers.chicos.com
+J. Crew,Retail/Apparel,https://www.jcrew.com/help/careers
+Banana Republic,Retail/Apparel,https://www.bananarepublic.gap.com/browse/careers.do
+Levi Strauss,Consumer Apparel,https://careers.levistrauss.com
+G-III Apparel,Consumer Apparel,https://www.g-iii.com/careers
+Carter Hawley Hale,Retail,https://careers.carters.com
+Bed Bath & Beyond (Overstock),Retail,https://careers.overstock.com
+Williams-Sonoma,Retail/Home,https://www.williams-sonomainc.com/careers
+Restoration Hardware (RH),Retail/Home,https://rh.com/about/careers
+Pier 1 Imports,Retail/Home,https://www.pier1.com/careers
+Crate and Barrel,Retail/Home,https://www.crateandbarrel.com/careers
+Wayfair,E-Commerce/Home,https://www.wayfair.com/careers
+Chewy,E-Commerce/Pet,https://careers.chewy.com
+Petco,Retail/Pet,https://careers.petco.com
+PetSmart,Retail/Pet,https://careers.petsmart.com
+Dick's Sporting Goods,Retail/Sports,https://www.dickssportinggoods.jobs
+REI,Retail/Outdoor,https://www.rei.com/careers
+Academy Sports,Retail/Sports,https://www.academy.com/careers
+Bass Pro Shops,Retail/Outdoor,https://careers.basspro.com
+Cabela's,Retail/Outdoor,https://www.cabelas.com/careers
+Tractor Supply,Retail/Farm,https://www.tractorsupply.com/tsc/cms/careers
+Ace Hardware,Retail/Home Improvement,https://www.acehardware.com/about-ace/careers
+True Value,Retail/Home Improvement,https://www.truevalue.com/careers
+Fastenal,Industrial Distribution,https://jobs.fastenal.com
+W.W. Grainger,Industrial Distribution,https://jobs.grainger.com
+MSC Industrial Direct,Industrial Distribution,https://careers.mscdirect.com
+HD Supply,Industrial Distribution,https://www.hdsupply.com/careers
+Genuine Parts,Industrial Distribution,https://jobs.genpt.com
+Wesco International,Industrial Distribution,https://www.wesco.com/careers
+Anixter International,Industrial Distribution,https://www.wesco.com/careers
+Avnet,Technology Distribution,https://www.avnet.com/wps/portal/us/about-avnet/careers
+Arrow Electronics,Technology Distribution,https://careers.arrow.com
+TD SYNNEX,Technology Distribution,https://careers.synnex.com
+Insight Direct,Technology Services,https://careers.insight.com
+CDW,Technology Solutions,https://www.cdw.com/content/cdw/en/jobs.html
+Leidos,Defense/Technology,https://careers.leidos.com
+Booz Allen Hamilton,Consulting/Defense,https://careers.boozallen.com
+SAIC,Defense/Technology,https://jobs.saic.com
+ManTech,Defense/Technology,https://www.mantech.com/careers
+CACI International,Defense/Technology,https://careers.caci.com
+Peraton,Defense/Technology,https://www.peraton.com/careers
+L3Harris Technologies,Aerospace/Defense,https://careers.l3harris.com
+Textron,Aerospace/Defense,https://www.textron.com/careers
+TransDigm Group,Aerospace/Defense,https://www.transdigm.com/careers
+Curtiss-Wright,Aerospace/Defense,https://careers.curtisswright.com
+Heico,Aerospace/Defense,https://careers.heico.com
+Moog,Aerospace/Defense,https://www.moog.com/company/careers
+Woodward,Aerospace/Defense,https://www.woodward.com/careers
+Triumph Group,Aerospace/Defense,https://careers.triumphgroup.com
+Spirit AeroSystems,Aerospace/Manufacturing,https://careers.spiritaero.com
+Ducommun,Aerospace/Manufacturing,https://www.ducommun.com/careers
+Kaman,Aerospace/Industrial,https://www.kaman.com/careers
+Astronics,Aerospace/Technology,https://www.astronics.com/careers
+Aerojet Rocketdyne,Aerospace/Defense,https://www.l3harris.com/careers
+Mercury Systems,Defense Electronics,https://www.mrcy.com/careers
+Kratos Defense,Defense Technology,https://www.kratosdefense.com/careers
+Vectrus (V2X),Defense Services,https://v2x.com/careers
+PAE,Defense Services,https://www.pae.com/careers
+Engility,Defense Services,https://careers.engility.com
+DXC Technology,IT Services,https://careers.dxc.com
+Cognizant,IT Services,https://careers.cognizant.com
+Infosys (US),IT Services,https://www.infosys.com/careers
+Wipro (US),IT Services,https://careers.wipro.com
+Tata Consultancy Services (US),IT Services,https://www.tcs.com/careers
+HCL Technologies (US),IT Services,https://www.hcltech.com/careers
+Accenture,Consulting/IT,https://www.accenture.com/us-en/careers
+Deloitte,Consulting,https://www2.deloitte.com/us/en/careers.html
+PwC,Consulting,https://www.pwc.com/us/en/careers.html
+EY (Ernst & Young),Consulting,https://www.ey.com/en_us/careers
+KPMG,Consulting,https://www.kpmg.com/us/en/careers.html
+McKinsey & Company,Consulting,https://www.mckinsey.com/careers
+Boston Consulting Group,Consulting,https://careers.bcg.com
+Bain & Company,Consulting,https://www.bain.com/careers
+Oliver Wyman,Consulting,https://www.oliverwyman.com/careers.html
+A.T. Kearney,Consulting,https://www.kearney.com/careers
+Gartner,Research/Consulting,https://jobs.gartner.com
+Forrester Research,Research/Consulting,https://www.forrester.com/careers
+IDC,Research/Consulting,https://www.idc.com/about/careers
+IHS Markit,Information Services,https://careers.spglobal.com
+S&P Global,Information Services,https://careers.spglobal.com
+Moody's,Information Services,https://careers.moodys.com
+Verisk Analytics,Data Analytics,https://careers.verisk.com
+Dun & Bradstreet,Data Analytics,https://www.dnb.com/company/careers.html
+TransUnion,Data/Credit,https://transunion.com/career
+Equifax,Data/Credit,https://careers.equifax.com
+Experian (US),Data/Credit,https://www.experianplc.com/careers
+Fair Isaac (FICO),Data Analytics,https://www.fico.com/en/careers
+Ceridian,HCM Technology,https://www.ceridian.com/careers
+Paychex,HCM Technology,https://www.paychex.com/careers
+ADP,HCM Technology,https://jobs.adp.com
+HealthEquity,Healthcare Fintech,https://jobs.healthequity.com
+Alight Solutions,HR Technology,https://careers.alight.com
+Conduent,Business Process Services,https://www.conduent.com/careers
+Concentrix,Business Process Services,https://careers.concentrix.com
+TTEC,Business Process Services,https://www.ttecjobs.com
+Teleperformance (US),Business Process Services,https://jobs.teleperformance.com
+Fiserv,Fintech,https://careers.fiserv.com
+FIS (Fidelity National Info Svcs),Fintech,https://careers.fisglobal.com
+NCR Corporation,Fintech/Retail Tech,https://www.ncr.com/careers
+Verifone,Payment Technology,https://www.verifone.com/en/us/company/careers
+Jack Henry & Associates,Fintech,https://careers.jackhenry.com
+Temenos (US),Banking Technology,https://www.temenos.com/careers
+SS&C Technologies,Finance Technology,https://www.ssctech.com/careers
+Broadridge Financial,Finance Technology,https://careers.broadridge.com
+Donnelley Financial Solutions,Finance Technology,https://www.dfinsolutions.com/careers
+FactSet,Finance Data,https://www.factset.com/careers
+Morningstar,Finance Research,https://www.morningstar.com/careers
+MSCI,Finance Analytics,https://www.msci.com/careers
+Intercontinental Exchange (ICE),Finance/Exchanges,https://careers.ice.com
+Nasdaq,Finance/Exchanges,https://www.nasdaq.com/about/careers
+CBOE Global Markets,Finance/Exchanges,https://careers.cboe.com
+MarketAxess,Finance Technology,https://www.marketaxess.com/about/careers
+Tradeweb,Finance Technology,https://www.tradeweb.com/careers
+Virtu Financial,Finance Technology,https://www.virtu.com/careers
+Citadel,Finance/Hedge Fund,https://www.citadel.com/careers
+Two Sigma,Finance/Quant,https://www.twosigma.com/careers
+Jane Street,Finance/Trading,https://www.janestreet.com/careers
+D.E. Shaw,Finance/Quant,https://www.deshaw.com/careers
+Renaissance Technologies,Finance/Quant,https://www.rentec.com/Careers.action
+Point72,Finance/Hedge Fund,https://point72.com/careers
+Millennium Management,Finance/Hedge Fund,https://www.mlp.com/careers
+Apollo Global Management,Private Equity,https://www.apollo.com/careers
+KKR,Private Equity,https://www.kkr.com/careers
+Blackstone,Private Equity,https://www.blackstone.com/careers
+Carlyle Group,Private Equity,https://www.carlyle.com/careers
+TPG,Private Equity,https://www.tpg.com/careers
+Warburg Pincus,Private Equity,https://www.warburgpincus.com/careers
+Francisco Partners,Private Equity,https://www.franciscopartners.com/careers
+Vista Equity Partners,Private Equity,https://www.vistaequitypartners.com/careers
+Thoma Bravo,Private Equity,https://www.thomabravo.com/careers
+Silver Lake,Private Equity,https://www.silverlake.com/careers
+Andreessen Horowitz (a16z),Venture Capital,https://a16z.com/about/jobs
+Sequoia Capital,Venture Capital,https://www.sequoiacap.com/careers
+Benchmark Capital,Venture Capital,https://www.benchmark.com/careers
+Kleiner Perkins,Venture Capital,https://www.kleinerperkins.com/careers
+General Catalyst,Venture Capital,https://www.generalcatalyst.com/careers
+Accel Partners,Venture Capital,https://www.accel.com/careers
+Greylock Partners,Venture Capital,https://greylock.com/careers
+Lightspeed Venture Partners,Venture Capital,https://lsvp.com/careers
+New Enterprise Associates,Venture Capital,https://www.nea.com/careers
+Insight Partners,Venture Capital,https://www.insightpartners.com/careers
+Abbott Laboratories,Healthcare/Medical Devices,https://www.jobs.abbott
+Medtronic,Healthcare/Medical Devices,https://jobs.medtronic.com
+Boston Scientific,Healthcare/Medical Devices,https://jobs.bostonscientific.com
+Stryker,Healthcare/Medical Devices,https://careers.stryker.com
+Zimmer Biomet,Healthcare/Medical Devices,https://careers.zimmerbiomet.com
+Becton Dickinson,Healthcare/Medical Devices,https://jobs.bd.com
+Edwards Lifesciences,Healthcare/Medical Devices,https://www.edwards.com/careers
+Hologic,Healthcare/Medical Devices,https://careers.hologic.com
+Haemonetics,Healthcare/Medical Devices,https://careers.haemonetics.com
+Align Technology,Healthcare/Medical Devices,https://jobs.aligntech.com
+Danaher,Healthcare/Industrials,https://jobs.danaher.com
+Thermo Fisher Scientific,Healthcare/Lab,https://jobs.thermofisher.com
+Agilent Technologies,Healthcare/Lab,https://careers.agilent.com
+Waters Corporation,Healthcare/Lab,https://careers.waters.com
+Bio-Techne,Healthcare/Lab,https://www.bio-techne.com/careers
+Illumina,Healthcare/Genomics,https://www.illumina.com/company/careers.html
+Pacific Biosciences,Healthcare/Genomics,https://www.pacb.com/careers
+10x Genomics,Healthcare/Genomics,https://www.10xgenomics.com/careers
+Veeva Systems,Healthcare Technology,https://careers.veeva.com
+Medidata Solutions,Healthcare Technology,https://www.medidata.com/en/careers
+IQVIA,Healthcare Data,https://jobs.iqvia.com
+Quintiles IMS,Healthcare Data,https://jobs.iqvia.com
+Covance (Labcorp),Healthcare Services,https://careers.labcorp.com
+Quest Diagnostics,Healthcare Services,https://careers.questdiagnostics.com
+DaVita,Healthcare Services,https://careers.davita.com
+Kindred Healthcare,Healthcare Services,https://www.kindredhealthcare.com/careers
+Encompass Health,Healthcare Services,https://careers.encompasshealth.com
+Surgery Partners,Healthcare Services,https://www.surgerypartners.com/careers
+Tenet Healthcare,Healthcare Services,https://www.tenethealth.com/careers
+Community Health Systems,Healthcare Services,https://www.chs.net/careers
+Ardent Health Services,Healthcare Services,https://www.ardenthealth.com/careers
+LifePoint Health,Healthcare Services,https://www.lifepointhealth.net/careers
+Steward Health Care,Healthcare Services,https://stewardhealthcare.com/careers
+Select Medical,Healthcare Services,https://www.selectmedical.com/careers
+Acadia Healthcare,Healthcare Services,https://www.acadiahealthcare.com/careers
+Cerner (Oracle Health),Healthcare Technology,https://careers.oracle.com/jobs
+Epic Systems,Healthcare Technology,https://careers.epic.com
+Allscripts,Healthcare Technology,https://www.allscripts.com/careers
+athenahealth,Healthcare Technology,https://www.athenahealth.com/about/careers
+Change Healthcare,Healthcare Technology,https://www.changehealthcare.com/careers
+Evolent Health,Healthcare Technology,https://www.evolenthealth.com/careers
+Netsmart Technologies,Healthcare Technology,https://www.ntst.com/careers
+NextGen Healthcare,Healthcare Technology,https://www.nextgen.com/careers
+Greenway Health,Healthcare Technology,https://www.greenwayhealth.com/careers
+Phreesia,Healthcare Technology,https://www.phreesia.com/company/careers
+Doximity,Healthcare Technology,https://workat.doximity.com
+Teladoc Health,Healthcare Technology,https://careers.teladochealth.com
+Hims & Hers,Healthcare/DTC,https://www.hims.com/careers
+Ro Health,Healthcare/DTC,https://ro.co/careers
+Oscar Health,Healthcare Insurance,https://www.hioscar.com/careers
+Bright Health,Healthcare Insurance,https://www.brighthealthgroup.com/careers
+Clover Health,Healthcare Insurance,https://www.cloverhealth.com/en/careers
+Alignment Healthcare,Healthcare,https://www.alignmenthealthcare.com/careers
+Signify Health,Healthcare,https://www.signifyhealth.com/careers
+Privia Health,Healthcare,https://www.priviahealth.com/careers
+Lyra Health,Mental Health Tech,https://www.lyrahealth.com/company/careers
+Spring Health,Mental Health Tech,https://www.springhealth.com/about/careers
+Headspace,Mental Health/Wellness,https://www.headspace.com/careers
+Calm,Mental Health/Wellness,https://www.calm.com/careers
+Better.com (Betterment),Fintech,https://www.betterment.com/careers
+Robinhood,Fintech,https://careers.robinhood.com
+Chime,Fintech,https://www.chime.com/careers
+Plaid,Fintech,https://plaid.com/careers
+Affirm,Fintech,https://www.affirm.com/careers
+Klarna (US),Fintech,https://www.klarna.com/careers
+Brex,Fintech,https://www.brex.com/careers
+Ramp,Fintech,https://ramp.com/careers
+Mercury Bank,Fintech,https://mercury.com/careers
+Navan (TripActions),Travel Tech/Fintech,https://navan.com/careers
+Expensify,Fintech/Expense,https://we.are.expensify.com/jobs
+Concur (SAP),Travel/Expense Tech,https://careers.sap.com
+Coupa Software,Business Spend Mgmt,https://www.coupa.com/company/careers
+Jaggaer,Procurement Tech,https://www.jaggaer.com/company/careers
+Ivalua,Procurement Tech,https://www.ivalua.com/careers
+Beeline,Workforce Management,https://www.beeline.com/careers
