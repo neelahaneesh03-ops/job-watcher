@@ -617,16 +617,20 @@ def write_csv(name, jobs):
                         j["source"], " · ".join(badges(j)), j["url"], j.get("one_liner", "")])
 
 
-# ---------------------------------------------------------------- main
-def main():
-    meta = load_json("meta.json", {"runs": 0})
-    run_no = meta["runs"]
-    seen = load_json("seen.json", {})
-    seeded = set(load_json("seeded_boards.json", []))
-    first_run = not seen
-    with open(os.path.join(ROOT, "companies.csv")) as f:
-        mine_index = CompanyIndex([r["company"] for r in csv.DictReader(f)])
+def check_job(j):
+    """Read the description; return (job, reason_dropped or None)."""
+    text = describe(j)
+    j["years"] = min_years(text) if text else None
+    if text and CFG["sponsorship"]["drop_no_sponsorship"] and NO_SPONSOR.search(text):
+        return j, "no sponsorship"
+    if j["years"] is not None and j["years"] > CFG["experience"]["max_required_years"]:
+        return j, "too many years"
+    if text and (SPONSOR_FRIENDLY.search(text) or OPT_FRIENDLY.search(text)):
+        j["sponsor"] = True
+    return j, None
 
+
+def collect_jobs(run_no):
     jobs, ok_boards = [], []
     if CFG["sources"]["simplify_new_grad"]:
         sj = simplify_jobs()
@@ -645,7 +649,85 @@ def main():
         if j["source"] == "Simplify new-grad" and dedup[k] is not j:
             dedup[k]["newgrad"] = True
             dedup[k]["sponsor"] = dedup[k].get("sponsor") or j.get("sponsor")
-    jobs = list(dedup.values())
+    return list(dedup.values()), ok_boards
+
+
+def mine_index():
+    with open(os.path.join(ROOT, "companies.csv")) as f:
+        return CompanyIndex([r["company"] for r in csv.DictReader(f)])
+
+
+FOCUS = re.compile(r"machine learning|\bml\b|\bai\b|computer vision|vision|perception|robotic|deep learning|"
+                   r"applied scientist|research engineer|inference|llm", re.I)
+
+
+def fit_score(j):
+    """How good a fit a job is for you; higher is better."""
+    s = 0
+    s += 3 if j.get("sponsor") else 0
+    s += 2 if j.get("newgrad") or re.search(r"new grad|university|entry|early career|junior|\b(i|1)\b",
+                                             j["title"], re.I) else 0
+    s += 2 if FOCUS.search(j["title"]) else 0
+    s += 1 if j.get("years") in (0, 1) else 0
+    s += 1 if j.get("mine") else 0
+    s += 1 if j.get("gem") else 0
+    t = parse_time(j.get("posted_at"))
+    if t:
+        age = (NOW - t).days
+        s += 2 if age <= 3 else 1 if age <= 7 else 0
+    return s
+
+
+def digest():
+    """Once a day: fully check every open match (not just new ones) and email the best ones."""
+    n = int(os.environ.get("DIGEST_SIZE", "25"))
+    jobs, _ = collect_jobs(1)  # skip Workday's slow per-board search in the digest
+    already = load_json("digest_sent.json", {})
+    mine = mine_index()
+    pool = []
+    for j in jobs:
+        t = parse_time(j.get("posted_at"))
+        if j["id"] in already or (t and (NOW - t).days > 30):
+            continue
+        j["mine"] = mine.match(j["company"])
+        pool.append(j)
+    # Pre-rank on what we know without descriptions, then read descriptions for the best few hundred.
+    pool.sort(key=fit_score, reverse=True)
+    pool = pool[:600]
+    kept, dropped = [], {}
+    with ThreadPoolExecutor(16) as ex:
+        for j, why in ex.map(check_job, pool):
+            if why:
+                dropped[why] = dropped.get(why, 0) + 1
+            else:
+                kept.append(j)
+    kept.sort(key=fit_score, reverse=True)
+    top = kept[:n]
+    log(f"Digest: {len(pool)} checked, dropped {dropped}, sending top {len(top)}")
+    for j in top:
+        already[j["id"]] = TODAY
+    cutoff = (NOW - dt.timedelta(days=45)).date().isoformat()
+    save_json("digest_sent.json", {k: v for k, v in already.items() if v >= cutoff})
+    write_csv("digest_full_ranked.csv", kept)
+    if not top:
+        return
+    html_body, text_body, total = build_email([("Best open jobs for you today, ranked", top)])
+    html_body = html_body.replace("new jobs for you", "top picks from all open jobs", 1)
+    send_email(f"Today's top {total} jobs for you", html_body, text_body)
+    push(f"Today's top {total} jobs", "\n".join(f"{j['company']}: {j['title']}" for j in top[:10]))
+
+
+# ---------------------------------------------------------------- main
+def main():
+    if os.environ.get("MODE") == "digest":
+        return digest()
+    meta = load_json("meta.json", {"runs": 0})
+    run_no = meta["runs"]
+    seen = load_json("seen.json", {})
+    seeded = set(load_json("seeded_boards.json", []))
+    first_run = not seen
+    mine = mine_index()
+    jobs, ok_boards = collect_jobs(run_no)
 
     new = []
     for j in jobs:
@@ -660,27 +742,15 @@ def main():
     seeded |= set(ok_boards)
 
     # Read descriptions of new jobs: experience + sponsorship checks.
-    kept = []
-
-    def check(j):
-        text = describe(j)
-        j["years"] = min_years(text) if text else None
-        if text and CFG["sponsorship"]["drop_no_sponsorship"] and NO_SPONSOR.search(text):
-            return j, "no sponsorship"
-        if j["years"] is not None and j["years"] > CFG["experience"]["max_required_years"]:
-            return j, "too many years"
-        if text and (SPONSOR_FRIENDLY.search(text) or OPT_FRIENDLY.search(text)):
-            j["sponsor"] = True
-        return j, None
-
-    dropped = {}
+    kept, dropped = [], {}
     with ThreadPoolExecutor(12) as ex:
-        for j, why in ex.map(check, new):
+        for j, why in ex.map(check_job, new):
             if why:
                 dropped[why] = dropped.get(why, 0) + 1
             else:
-                j["mine"] = mine_index.match(j["company"])
+                j["mine"] = mine.match(j["company"])
                 kept.append(j)
+    kept.sort(key=fit_score, reverse=True)
     log(f"New jobs: {len(new)}; dropped {dropped}; sending {len(kept)}")
 
     cutoff = (NOW - dt.timedelta(days=14)).date().isoformat()
