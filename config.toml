@@ -9,7 +9,7 @@ exclude_regex = '''((?<!technical )\bstaff\b|\bprincipal\b|\bdirector\b|\bmanage
 [experience]
 # Reads each new job's description. Drops it if the SMALLEST "N+ years" it asks for is above this.
 # You have 3 years at Accenture + an MS, so 3 is also reasonable here.
-max_required_years = 2
+max_required_years = 3
 
 [sponsorship]
 # Drop jobs whose description rules out visa sponsorship / requires citizenship or clearance.
