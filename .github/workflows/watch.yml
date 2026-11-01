@@ -2,11 +2,11 @@ name: job-watcher
 
 on:
   schedule:
-    - cron: "7 * * * *"   # every hour at :07 (UTC). Private repo? use "7 */2 * * *" to stay in free minutes.
+    - cron: "7 * * * *"   # every hour at :07 (UTC)
   workflow_dispatch:       # lets you click "Run workflow" to test
 
 permissions:
-  contents: write          # to save state/seen.json back to the repo
+  contents: read
 
 concurrency:
   group: job-watcher
@@ -15,7 +15,7 @@ concurrency:
 jobs:
   watch:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
 
@@ -25,6 +25,13 @@ jobs:
 
       - run: pip install requests beautifulsoup4
 
+      # Remembers which jobs were already seen between runs.
+      - uses: actions/cache/restore@v4
+        with:
+          path: state
+          key: watcher-state-${{ github.run_id }}
+          restore-keys: watcher-state-
+
       - name: Check for new jobs
         run: python watcher.py
         env:
@@ -33,12 +40,16 @@ jobs:
           TO_EMAIL: ${{ secrets.TO_EMAIL }}
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
 
-      - name: Save state
+      - uses: actions/cache/save@v4
         if: always()
-        run: |
-          git config user.name "job-watcher"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add state
-          git diff --cached --quiet || git commit -m "Update seen jobs" -q
-          git pull --rebase -q || true
-          git push -q
+        with:
+          path: state
+          key: watcher-state-${{ github.run_id }}
+
+      # Download from the run's Summary page: all currently open matching jobs as CSV.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: open-jobs
+          path: out/
+          retention-days: 3
