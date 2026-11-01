@@ -693,6 +693,7 @@ def digest():
         pool.append(j)
     # Pre-rank on what we know without descriptions, then read descriptions for the best few hundred.
     pool.sort(key=fit_score, reverse=True)
+    all_pool = pool
     pool = pool[:600]
     kept, dropped = [], {}
     with ThreadPoolExecutor(16) as ex:
@@ -703,17 +704,30 @@ def digest():
                 kept.append(j)
     kept.sort(key=fit_score, reverse=True)
     top = kept[:n]
-    log(f"Digest: {len(pool)} checked, dropped {dropped}, sending top {len(top)}")
-    for j in top:
+    # Always include a separate YC startup section, best gems first.
+    yc_n = int(os.environ.get("DIGEST_YC_SIZE", "10"))
+    top_ids = {j["id"] for j in top}
+    yc_cands = [j for j in all_pool if j.get("yc_batch") and j["id"] not in top_ids]
+    yc_cands.sort(key=lambda j: (j.get("gem_score", 0), fit_score(j)), reverse=True)
+    yc_top = []
+    with ThreadPoolExecutor(16) as ex:
+        for j, why in ex.map(check_job, yc_cands[:yc_n * 5]):
+            if not why and len(yc_top) < yc_n:
+                yc_top.append(j)
+    yc_top.sort(key=lambda j: (j.get("gem_score", 0), fit_score(j)), reverse=True)
+    log(f"Digest: {len(pool)} checked, dropped {dropped}, sending top {len(top)} + {len(yc_top)} YC")
+    top_all = top + yc_top
+    for j in top_all:
         already[j["id"]] = TODAY
     cutoff = (NOW - dt.timedelta(days=45)).date().isoformat()
     save_json("digest_sent.json", {k: v for k, v in already.items() if v >= cutoff})
     write_csv("digest_full_ranked.csv", kept)
-    if not top:
+    if not top_all:
         return
-    html_body, text_body, total = build_email([("Best open jobs for you today, ranked", top)])
+    html_body, text_body, total = build_email([("Best open jobs for you today, ranked", top),
+                                               ("YC startups worth a look (⭐ gems first)", yc_top)])
     html_body = html_body.replace("new jobs for you", "top picks from all open jobs", 1)
-    send_email(f"Today's top {total} jobs for you", html_body, text_body)
+    send_email(f"Today's top {len(top)} jobs + {len(yc_top)} YC startups for you", html_body, text_body)
     push(f"Today's top {total} jobs", "\n".join(f"{j['company']}: {j['title']}" for j in top[:10]))
 
 
