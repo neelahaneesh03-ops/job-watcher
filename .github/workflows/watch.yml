@@ -1,9 +1,6 @@
 name: job-watcher
 
 on:
-  schedule:
-    - cron: "7 * * * *"    # every hour at :07: email NEW jobs
-    - cron: "23 13 * * *"  # daily ~8:23am Eastern: email today's TOP 25 from all open jobs
   workflow_dispatch:        # lets you click "Run workflow" to test
     inputs:
       mode:
