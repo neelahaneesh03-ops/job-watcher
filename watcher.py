@@ -151,8 +151,17 @@ def loc_ok(loc):
     return False
 
 
+OFF_TARGET = re.compile(r"biologist|chemist|physicist|clinician|physician|pharmacist|\bnurse\b|\btutor\b|"
+                        r"\btrainer\b|annotat|\blabeler\b|writer", re.I)
+TITLE_SKIPPED = {}  # jobs that matched your roles but were skipped for an off-target word in the title
+
+
 def wanted(j):
-    return title_ok(j.get("title", "")) and loc_ok(j.get("location", ""))
+    t = j.get("title", "")
+    ok = title_ok(t) and loc_ok(j.get("location", ""))
+    if not ok and t and INC.search(t) and OFF_TARGET.search(t) and loc_ok(j.get("location", "")):
+        TITLE_SKIPPED[j["id"]] = j
+    return ok
 
 
 NEG = (r"(no|not|unable to|cannot|can ?not|can't|won't|will not|do not|does not|don't|are not able to|"
@@ -213,6 +222,27 @@ SENIOR_SIGNALS = [re.compile(x, re.I) for x in [
     r"\b(significant|substantial|deep)\s+experience\b",
     r"\bfrom\s+design\s+through\s+production\b",
 ]]
+
+
+PHD = re.compile(r"\bph\.?\s?d\.?s?\b|\bdoctorate\b|\bdoctoral\s+degree\b", re.I)
+PHD_SOFT = re.compile(r"prefer|\bplus\b|bonus|nice[- ]to[- ]have|ideal|desired|\bor\b[^.]{0,40}(master|m\.?s\.?\b|"
+                      r"bachelor|b\.?s\.?\b|equivalent|experience)|(master|m\.?s\.?|bachelor|b\.?s\.?)[^.]{0,30}\bor\b"
+                      r"|/\s*(ms|m\.s|master)|candidates?\b|students?\b|intern", re.I)
+PHD_HARD = re.compile(r"^\W*(in|degree|required|requirement|is required|holder)\b|\b(required|must|minimum|"
+                      r"requirements?)\b", re.I)
+
+
+def phd_required(text):
+    """True if the posting requires a PhD (not 'PhD preferred' / 'PhD or MS' / 'our team of PhDs')."""
+    for m in PHD.finditer(text):
+        before, after = text[max(0, m.start() - 60):m.start()], text[m.end():m.end() + 90]
+        window = before[-40:] + " " + after
+        if PHD_SOFT.search(window):
+            continue
+        starts_item = re.search(r"(^|[\n•·\-:]|requirements?\W*)\s*$", before, re.I)
+        if PHD_HARD.search(after[:40]) or (starts_item and re.match(r"\s*(in|degree)\b", after, re.I)):
+            return True
+    return False
 
 
 def senior_signals(text):
@@ -956,10 +986,15 @@ def write_csv(name, jobs):
     os.makedirs(OUT, exist_ok=True)
     with open(os.path.join(OUT, name), "w", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["company", "title", "location", "posted", "source", "tags", "apply_url", "what_they_do"])
+        w.writerow(["company", "title", "location", "posted", "source", "tags", "apply_url", "what_they_do",
+                    "why_dropped"])
         for j in jobs:
-            w.writerow([j["company"], j["title"], j.get("location", ""), (j.get("posted_at") or "")[:10],
-                        j["source"], " · ".join(badges(j)), j["url"], j.get("one_liner", "")])
+            w.writerow([j.get("company", ""), j["title"], j.get("location", ""), (j.get("posted_at") or "")[:10],
+                        j.get("source", ""), " · ".join(badges(j)), j["url"], j.get("one_liner", ""),
+                        j.get("why", "")])
+
+
+DROPPED = []  # new jobs removed by the description checks this run (saved to dropped_this_run.csv)
 
 
 def check_job(j):
@@ -970,6 +1005,8 @@ def check_job(j):
         return j, "no sponsorship"
     if j["years"] is not None and j["years"] > CFG["experience"]["max_required_years"]:
         return j, "too many years"
+    if text and CFG["experience"].get("drop_phd_required", True) and phd_required(text):
+        return j, "PhD required"
     # No number given, but written for senior people ("experienced engineer to help lead...").
     lim = CFG["experience"].get("max_senior_signals", 1)
     if text and j["years"] is None and senior_signals(text) > lim:
@@ -1137,6 +1174,8 @@ def digest():
         for j, why in ex.map(check_job, pool):
             if why:
                 dropped[why] = dropped.get(why, 0) + 1
+                j["why"] = why
+                DROPPED.append(j)
             else:
                 kept.append(j)
     kept.sort(key=fit_score, reverse=True)
@@ -1159,6 +1198,7 @@ def digest():
     cutoff = (NOW - dt.timedelta(days=45)).date().isoformat()
     save_json("digest_sent.json", {k: v for k, v in already.items() if v >= cutoff})
     write_csv("digest_full_ranked.csv", kept)
+    write_csv("dropped_this_run.csv", DROPPED)
     news = funding_news() if CFG["news"]["funding_news"] else []
     new_yc = new_yc_companies() if CFG["news"]["new_yc_companies"] else []
     if not (top_all or news or new_yc):
@@ -1206,6 +1246,8 @@ def main():
         for j, why in ex.map(check_job, new):
             if why:
                 dropped[why] = dropped.get(why, 0) + 1
+                j["why"] = why
+                DROPPED.append(j)
             else:
                 j["mine"] = mine.match(j["company"])
                 kept.append(j)
@@ -1224,6 +1266,9 @@ def main():
     write_csv("open_newgrad_jobs.csv", sorted([j for j in jobs if j.get("newgrad")],
                                               key=lambda j: j.get("posted_at") or "", reverse=True))
     write_csv("sent_this_run.csv", kept)
+    write_csv("dropped_this_run.csv", DROPPED)
+    skipped = [dict(j, why="off-target word in title") for j in TITLE_SKIPPED.values()]
+    write_csv("title_skipped_open.csv", skipped)
 
     if first_run:
         subj = "Job watcher is live"
