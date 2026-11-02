@@ -22,13 +22,14 @@ allow_non_us = false
 simplify_new_grad = true      # SimplifyJobs New-Grad-Positions (curated new-grad list, big tech included)
 job_board_directory = true    # ~12k company boards on Greenhouse / Ashby / Lever / Workday
 yc = true                     # every hiring YC company (finds their job board automatically)
-workday_every_n_runs = 2      # Workday is slow; check it every 2nd run (every 2 hours)
+workday_every_n_runs = 3      # Workday is slow; each run checks 1/3 of Workday boards (each board every 3 hours)
 workday_queries = ["software engineer", "machine learning"]
 custom_sites = true           # Amazon, Microsoft, Google, Apple, Meta career sites
 custom_queries = ["machine learning", "software engineer", "computer vision", "new grad"]
 hn_whos_hiring = true         # monthly "Ask HN: Who is hiring?" thread (many small/new startups)
 discover_more = true          # find job boards for companies in companies.csv + the Simplify list
-discovery_per_run = 500       # companies to look up per run (results are remembered)
+discovery_per_run = 400       # companies to look up per run (results are remembered)
+discovery_seconds = 150       # max time per run spent looking up new companies
 rediscover_days = 14
 
 
