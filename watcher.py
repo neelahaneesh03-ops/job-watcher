@@ -19,6 +19,7 @@ import smtplib
 import sys
 import time
 import tomllib
+import zlib
 from concurrent.futures import ThreadPoolExecutor
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -47,8 +48,11 @@ session.headers["User-Agent"] = UA
 session.mount("https://", requests.adapters.HTTPAdapter(pool_connections=48, pool_maxsize=48))
 
 
+START = time.time()
+
+
 def log(*a):
-    print(*a, file=sys.stderr, flush=True)
+    print(f"[{time.time() - START:5.0f}s]", *a, file=sys.stderr, flush=True)
 
 
 def get(url, **kw):
@@ -715,12 +719,20 @@ def discover_more(boards):
             todo.append(n)
     todo = todo[:CFG["sources"]["discovery_per_run"]]
 
+    budget_end = time.time() + CFG["sources"]["discovery_seconds"]
+
     def disc(n):
+        if time.time() > budget_end:
+            return n, None  # out of time this run; try again next run
         return n, discover_any(n)
 
-    with ThreadPoolExecutor(24) as ex:
-        for n, (p, t) in ex.map(disc, todo):
-            found[n] = {"board": p, "token": t, "checked": TODAY}
+    done = 0
+    with ThreadPoolExecutor(32) as ex:
+        for n, res in ex.map(disc, todo):
+            if res is not None:
+                found[n] = {"board": res[0], "token": res[1], "checked": TODAY}
+                done += 1
+    todo = todo[:done]
     save_json("discovered_boards.json", found)
     added = 0
     for n, info in found.items():
@@ -769,13 +781,18 @@ def collect_boards(run_no):
         todo = [c for c in companies if c["slug"] not in known or known[c["slug"]].get("checked", "") < stale]
         log(f"YC: {len(companies)} hiring companies, discovering boards for {len(todo)}")
 
+        yc_end = time.time() + CFG["sources"]["discovery_seconds"]
+
         def disc(c):
+            if time.time() > yc_end:
+                return c["slug"], None  # out of time; continue next run
             b, s = discover(c)
             return c["slug"], {"board": b, "slug": s, "checked": TODAY}
 
-        with ThreadPoolExecutor(16) as ex:
+        with ThreadPoolExecutor(32) as ex:
             for slug, info in ex.map(disc, todo):
-                known[slug] = info
+                if info:
+                    known[slug] = info
         save_json("yc_boards.json", known)
         for c in companies:
             info = known.get(c["slug"], {})
@@ -791,9 +808,10 @@ def collect_boards(run_no):
     if CFG["sources"]["discover_more"]:
         discover_more(boards)
 
-    do_workday = run_no % max(CFG["sources"]["workday_every_n_runs"], 1) == 0
-    if not do_workday:
-        boards = {k: v for k, v in boards.items() if v["platform"] != "workday"}
+    # Workday is slow, so each run checks a different slice of Workday boards (all covered every N runs).
+    k = max(CFG["sources"]["workday_every_n_runs"], 1)
+    boards = {key: v for key, v in boards.items()
+              if v["platform"] != "workday" or zlib.crc32(key.encode()) % k == run_no % k}
     return boards
 
 
@@ -805,7 +823,7 @@ def board_jobs(boards):
     fast = [(k, b) for k, b in boards.items() if b["platform"] != "workday"]
     slow = [(k, b) for k, b in boards.items() if b["platform"] == "workday"]
     jobs, ok_boards = [], []
-    for items, threads in ((fast, 24), (slow, 6)):
+    for items, threads in ((fast, 48), (slow, 12)):
         with ThreadPoolExecutor(threads) as ex:
             for key, b, js in ex.map(fetch, items):
                 if js is None:
