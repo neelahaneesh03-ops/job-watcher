@@ -353,7 +353,68 @@ def yc_page(slug):
     return [j for j in jobs.values() if wanted(j)]
 
 
-FETCHERS = {"ashby": ashby, "greenhouse": greenhouse, "lever": lever, "workday": workday, "yc": yc_page}
+def workable(token):
+    data = as_json(get(f"https://apply.workable.com/api/v1/widget/accounts/{token}", params={"details": "true"}))
+    if not isinstance(data, dict) or "jobs" not in data:
+        return None
+    out = []
+    for j in data["jobs"]:
+        loc = ", ".join(x for x in (j.get("city"), j.get("state"), j.get("country")) if x)
+        if j.get("telecommuting"):
+            loc = f"{loc} (Remote)".strip()
+        code = j.get("shortcode") or j.get("id")
+        job = {"id": f"wk:{token}:{code}", "title": j.get("title", ""), "location": loc,
+               "posted_at": j.get("published_on") or j.get("created_at"),
+               "url": j.get("url") or j.get("application_url") or f"https://apply.workable.com/{token}/j/{code}/",
+               "_desc": html_to_text(j.get("description", "")) + " " + html_to_text(j.get("requirements", "")),
+               "_desc_url": f"https://apply.workable.com/api/v2/accounts/{token}/jobs/{code}"}
+        if not job["_desc"].strip():
+            job.pop("_desc")
+        if wanted(job):
+            out.append(job)
+    return out
+
+
+def smartrecruiters(token):
+    out, offset, any_ok = [], 0, False
+    while offset < 300:
+        data = as_json(get(f"https://api.smartrecruiters.com/v1/companies/{token}/postings",
+                           params={"limit": 100, "offset": offset, "country": "us"}))
+        if not isinstance(data, dict) or "content" not in data:
+            break
+        any_ok = True
+        for j in data["content"]:
+            loc = j.get("location") or {}
+            where = ", ".join(x for x in (loc.get("city"), loc.get("region"), loc.get("country")) if x)
+            if loc.get("remote"):
+                where = f"{where} (Remote)".strip()
+            job = {"id": f"sr:{j.get('id')}", "title": j.get("name", ""), "location": where,
+                   "posted_at": j.get("releasedDate"),
+                   "url": f"https://jobs.smartrecruiters.com/{token}/{j.get('id')}",
+                   "_desc_url": j.get("ref") or f"https://api.smartrecruiters.com/v1/companies/{token}/postings/{j.get('id')}"}
+            if wanted(job):
+                out.append(job)
+        if len(data["content"]) < 100:
+            break
+        offset += 100
+    if not any_ok:
+        return None
+    return out
+
+
+FETCHERS = {"ashby": ashby, "greenhouse": greenhouse, "lever": lever, "workday": workday, "yc": yc_page,
+            "workable": workable, "smartrecruiters": smartrecruiters}
+
+
+def json_text(x):
+    """All text inside a JSON value, HTML stripped."""
+    if isinstance(x, str):
+        return html_to_text(x) if "<" in x or "&lt;" in x else x
+    if isinstance(x, dict):
+        return " ".join(json_text(v) for v in x.values())
+    if isinstance(x, list):
+        return " ".join(json_text(v) for v in x)
+    return ""
 
 
 def describe(j):
@@ -371,8 +432,10 @@ def describe(j):
         if info.get("location"):
             j["location"] = info["location"]
         return html_to_text(info.get("jobDescription", ""))
-    if "greenhouse.io" in url:
-        return html_to_text((as_json(r) or {}).get("content", ""))
+    if "json" in (getattr(r, "headers", {}).get("Content-Type") or "") or r.text.lstrip()[:1] in "{[":
+        data = as_json(r)
+        if data is not None:
+            return json_text(data)[:30000]
     soup = BeautifulSoup(r.text, "html.parser")
     for s in soup(["script", "style", "nav", "header", "footer"]):
         s.decompose()
@@ -402,8 +465,179 @@ def simplify_jobs():
                "sponsor": sp == "Offers Sponsorship"}
         if wanted(job):
             out.append(job)
+    SIMPLIFY_COMPANIES.update(x.get("company_name", "") for x in data if x.get("company_name"))
     log(f"Simplify: {len(out)} active new-grad roles match your filters")
     return out
+
+
+SIMPLIFY_COMPANIES = set()
+
+
+# ---------------------------------------------------------------- big-company custom career sites
+# These companies don't use a standard job system, so each gets its own small reader.
+# If a site changes or blocks us, its count in the log drops to 0 and the rest keeps working.
+
+def _title_from_slug(slug):
+    return re.sub(r"\b(Ai|Ml|Llm|Swe|Ios|Api|Cv|Gpu|Ar|Vr|Sde|Ii|Iii)\b", lambda x: x.group(1).upper(),
+                  slug.replace("-", " ").title())
+
+
+def amazon_jobs(q):
+    data = as_json(get("https://www.amazon.jobs/en/search.json",
+                       params={"base_query": q, "loc_query": "United States", "country": "USA",
+                               "sort": "recent", "result_limit": 100, "offset": 0}))
+    out = []
+    for j in (data or {}).get("jobs") or []:
+        try:
+            posted = dt.datetime.strptime(j.get("posted_date", ""), "%B %d, %Y").replace(tzinfo=dt.timezone.utc).isoformat()
+        except ValueError:
+            posted = None
+        out.append({"id": f"amzn:{j.get('id_icims') or j.get('id')}", "title": j.get("title", ""),
+                    "location": j.get("normalized_location") or j.get("location", ""), "posted_at": posted,
+                    "url": "https://www.amazon.jobs" + (j.get("job_path") or ""),
+                    "_desc": " ".join(html_to_text(j.get(k, "")) for k in
+                                      ("description", "basic_qualifications", "preferred_qualifications"))})
+    return out
+
+
+def microsoft_jobs(q):
+    out = []
+    data = as_json(get("https://apply.careers.microsoft.com/api/apply/v2/jobs",
+                       params={"domain": "microsoft.com", "query": q, "location": "United States",
+                               "sort_by": "timestamp", "start": 0, "num": 50}))
+    for j in (data or {}).get("positions") or []:
+        ts = j.get("t_create")
+        out.append({"id": f"msft:{j.get('id')}", "title": j.get("name", ""),
+                    "location": j.get("location") or "; ".join(j.get("locations") or []),
+                    "posted_at": dt.datetime.fromtimestamp(ts, dt.timezone.utc).isoformat() if ts else None,
+                    "url": j.get("canonicalPositionUrl") or f"https://apply.careers.microsoft.com/careers/job/{j.get('id')}",
+                    "_desc_url": f"https://apply.careers.microsoft.com/api/apply/v2/jobs/{j.get('id')}?domain=microsoft.com"})
+    if out:
+        return out
+    data = as_json(get("https://gcsservices.careers.microsoft.com/search/api/v1/search",
+                       params={"q": q, "lc": "United States", "l": "en_us", "pg": 1, "pgSz": 20,
+                               "o": "Recent", "flt": "true"}))
+    for j in (((data or {}).get("operationResult") or {}).get("result") or {}).get("jobs") or []:
+        p = j.get("properties") or {}
+        out.append({"id": f"msft:{j.get('jobId')}", "title": j.get("title", ""),
+                    "location": p.get("primaryLocation", ""), "posted_at": j.get("postingDate"),
+                    "url": f"https://jobs.careers.microsoft.com/global/en/job/{j.get('jobId')}",
+                    "_desc": html_to_text(p.get("description", "")) + " " + html_to_text(p.get("qualifications", ""))})
+    return out
+
+
+def google_jobs(q):
+    r = get("https://www.google.com/about/careers/applications/jobs/results",
+            params={"q": q, "location": "United States", "sort_by": "date"})
+    out, ids = [], set()
+    for m in re.finditer(r"jobs/results/(\d{6,})-([a-z0-9-]+)", r.text if r else ""):
+        if m.group(1) in ids:
+            continue
+        ids.add(m.group(1))
+        url = f"https://www.google.com/about/careers/applications/jobs/results/{m.group(1)}-{m.group(2)}"
+        out.append({"id": f"goog:{m.group(1)}", "title": _title_from_slug(m.group(2)), "location": "",
+                    "posted_at": None, "url": url, "_desc_url": url, "_kind": "html"})
+    return out
+
+
+def apple_jobs(q):
+    r = get("https://jobs.apple.com/en-us/search",
+            params={"search": q, "sort": "newest", "location": "united-states-USA"})
+    out, ids = [], set()
+    text = html.unescape(r.text) if r else ""
+    for m in re.finditer(r"/en-us/details/([0-9][0-9-]{5,})/([a-z0-9-]+)", text):
+        if m.group(1) in ids:
+            continue
+        ids.add(m.group(1))
+        url = f"https://jobs.apple.com/en-us/details/{m.group(1)}/{m.group(2)}"
+        out.append({"id": f"aapl:{m.group(1)}", "title": _title_from_slug(m.group(2)), "location": "",
+                    "posted_at": None, "url": url, "_desc_url": url, "_kind": "html"})
+    return out
+
+
+def meta_jobs(q):
+    r = get("https://www.metacareers.com/jobs", params={"q": q})
+    out, ids = [], set()
+    text = r.text if r else ""
+    for m in re.finditer(r'"id":"(\d{12,})","title":"([^"]{5,140})"', text):
+        if m.group(1) in ids:
+            continue
+        ids.add(m.group(1))
+        url = f"https://www.metacareers.com/jobs/{m.group(1)}/"
+        out.append({"id": f"meta:{m.group(1)}", "title": m.group(2).encode().decode("unicode_escape", "ignore"),
+                    "location": "", "posted_at": None, "url": url, "_desc_url": url, "_kind": "html"})
+    return out
+
+
+def hn_whos_hiring():
+    """Monthly 'Ask HN: Who is hiring?' thread — lots of small/new startups post only here."""
+    s = as_json(get("https://hn.algolia.com/api/v1/search_by_date",
+                    params={"tags": "story,author_whoishiring", "query": "who is hiring", "hitsPerPage": 5}))
+    hits = [h for h in (s or {}).get("hits") or [] if "who is hiring" in (h.get("title") or "").lower()]
+    if not hits:
+        log("HN Who's Hiring: thread not found")
+        return []
+    story = hits[0]["objectID"]
+    out, page = [], 0
+    while page < 10:
+        d = as_json(get("https://hn.algolia.com/api/v1/search",
+                        params={"tags": f"comment,story_{story}", "hitsPerPage": 1000, "page": page}))
+        hs = (d or {}).get("hits") or []
+        for h in hs:
+            if str(h.get("parent_id")) != str(story):
+                continue  # replies, not job posts
+            raw = h.get("comment_text") or ""
+            text = html_to_text(raw)
+            first = html_to_text(re.split(r"<p>", raw, maxsplit=1)[0])[:220]
+            parts = [p.strip() for p in re.split(r"\s\|\s", first)]
+            company = parts[0][:60] if parts else "HN post"
+            is_loc = lambda p: re.search(r"(?i:remote|onsite|on-site|in-office|hybrid|\bsf\b|nyc|\busa\b|united states)|,\s?[A-Z]{2}\b", p)
+            loc = " ".join(p for p in parts[1:] if is_loc(p))
+            role = " | ".join(p for p in parts[1:] if not is_loc(p) and not re.search(
+                r"full[- ]?time|part[- ]?time|contract|\$|visa|https?://", p, re.I))[:160]
+            job = {"id": f"hn:{h['objectID']}", "title": role or first[:160],
+                   "company": company, "location": loc, "posted_at": h.get("created_at"),
+                   "url": f"https://news.ycombinator.com/item?id={h['objectID']}", "_desc": text,
+                   "source": "HN Who's Hiring", "board": f"hn:{story}"}
+            # The first line lists several roles; match on the whole post instead of a single title.
+            us_ok = not NON_US.search(first) or re.search(
+                r"\b(us|usa|united states|sf|san francisco|bay area|new york|nyc|seattle|boston|austin)\b", first, re.I)
+            if INC.search(text[:600]) and us_ok:
+                out.append(job)
+        if len(hs) < 1000:
+            break
+        page += 1
+    log(f"HN Who's Hiring: {len(out)} matching posts in this month's thread")
+    return out
+
+
+CUSTOM_SITES = {"Amazon": amazon_jobs, "Microsoft": microsoft_jobs, "Google": google_jobs,
+                "Apple": apple_jobs, "Meta": meta_jobs}
+
+
+def custom_site_jobs():
+    def run(item):
+        name, fn = item
+        found = {}
+        for q in CFG["sources"]["custom_queries"]:
+            try:
+                for j in fn(q):
+                    found.setdefault(j["id"], j)
+            except Exception as e:  # one broken site must never stop the run
+                log(f"{name}: error {e}")
+        return name, list(found.values())
+
+    jobs, ok, counts = [], [], {}
+    with ThreadPoolExecutor(5) as ex:
+        for name, js in ex.map(run, CUSTOM_SITES.items()):
+            counts[name] = len(js)
+            if js:
+                ok.append(f"custom:{name.lower()}")
+            for j in js:
+                j.update(company=name, board=f"custom:{name.lower()}", source=f"{name} careers")
+            jobs += [j for j in js if wanted(j)]
+    log(f"Big-company sites (postings read): {counts}; matching: {len(jobs)}")
+    return jobs, ok
 
 
 def slug_candidates(c):
@@ -434,6 +668,71 @@ def discover(c):
     return None, None
 
 
+def discover_any(name):
+    """Find a job board for a company known only by name. Returns (platform, token) or (None, None)."""
+    low = name.lower().replace("&", "and")
+    low = re.sub(r"\([^)]*\)", "", low)
+    for suf in (" inc", " corporation", " corp", " company", " llc", " technologies", " labs", " ai"):
+        low = low.removesuffix(suf)
+    cands = []
+    for s in (re.sub(r"[^a-z0-9]", "", low), re.sub(r"[^a-z0-9]+", "-", low).strip("-")):
+        if len(s) >= 3 and s not in cands:
+            cands.append(s)
+    sr = re.sub(r"[^A-Za-z0-9]", "", re.sub(r"\([^)]*\)", "", name))
+    probes = [("ashby", s) for s in cands] + [("greenhouse", s) for s in cands] + \
+             [("lever", s) for s in cands] + [("workable", s) for s in cands] + \
+             [("smartrecruiters", x) for x in dict.fromkeys([sr, sr.lower()]) if len(x) >= 3]
+    for platform, token in probes:
+        url = {"ashby": f"https://api.ashbyhq.com/posting-api/job-board/{token}",
+               "greenhouse": f"https://boards-api.greenhouse.io/v1/boards/{token}/jobs",
+               "lever": f"https://api.lever.co/v0/postings/{token}?mode=json&limit=1",
+               "workable": f"https://apply.workable.com/api/v1/widget/accounts/{token}",
+               "smartrecruiters": f"https://api.smartrecruiters.com/v1/companies/{token}/postings?limit=1"}[platform]
+        data = as_json(get(url))
+        if isinstance(data, list) and data:
+            return platform, token
+        if isinstance(data, dict) and (data.get("jobs") or data.get("content")):
+            return platform, token
+    return None, None
+
+
+def discover_more(boards):
+    """Look for job boards of companies from your list + the Simplify list that we don't track yet.
+    Done a few hundred companies per run and remembered, so hourly runs stay quick."""
+    with open(os.path.join(ROOT, "companies.csv")) as f:
+        names = [r["company"] for r in csv.DictReader(f)]
+    names += sorted(SIMPLIFY_COMPANIES)
+    known_norm = {"".join(tokens(b["company"])) for b in boards.values()}
+    known_norm |= {"".join(tokens(b["token"].split("/")[-1])) for b in boards.values()}
+    found = load_json("discovered_boards.json", {})
+    stale = (NOW - dt.timedelta(days=CFG["sources"]["rediscover_days"])).date().isoformat()
+    todo = []
+    for n in dict.fromkeys(names):
+        k = "".join(tokens(n))
+        if not k or k in known_norm:
+            continue
+        if n not in found or found[n].get("checked", "") < stale:
+            todo.append(n)
+    todo = todo[:CFG["sources"]["discovery_per_run"]]
+
+    def disc(n):
+        return n, discover_any(n)
+
+    with ThreadPoolExecutor(24) as ex:
+        for n, (p, t) in ex.map(disc, todo):
+            found[n] = {"board": p, "token": t, "checked": TODAY}
+    save_json("discovered_boards.json", found)
+    added = 0
+    for n, info in found.items():
+        if info.get("board"):
+            key = f"{info['board']}:{info['token']}"
+            if key not in boards:
+                boards[key] = {"platform": info["board"], "token": info["token"], "company": n, "yc": None}
+                added += 1
+    log(f"Discovery: checked {len(todo)} more companies this run; tracking {added} extra boards "
+        f"({sum(1 for v in found.values() if v.get('board'))} found so far)")
+
+
 def gem_score(c):
     g = CFG["gems"]
     tags = set(c.get("tags") or []) | set(c.get("industries") or [])
@@ -457,7 +756,7 @@ def collect_boards(run_no):
             log("Directory: download failed, using cached copy")
         for x in data:
             p, t = x.get("platform"), x.get("token")
-            if p in ("greenhouse", "ashby", "lever", "workday") and t:
+            if p in ("greenhouse", "ashby", "lever", "workday", "workable") and t:
                 boards[f"{p}:{t}"] = {"platform": p, "token": t, "company": x.get("company") or t, "yc": None}
         log(f"Directory: {len(boards)} boards")
 
@@ -488,6 +787,9 @@ def collect_boards(run_no):
                 boards[key].update(company=c["name"], yc=yc)
             elif ycfg["check_yc_page_for_unknown"]:
                 boards[f"yc:{c['slug']}"] = {"platform": "yc", "token": c["slug"], "company": c["name"], "yc": yc}
+
+    if CFG["sources"]["discover_more"]:
+        discover_more(boards)
 
     do_workday = run_no % max(CFG["sources"]["workday_every_n_runs"], 1) == 0
     if not do_workday:
@@ -647,6 +949,14 @@ def collect_jobs(run_no):
     bj, bk = board_jobs(collect_boards(run_no))
     jobs += bj
     ok_boards += bk
+    if CFG["sources"]["custom_sites"]:
+        cj, ck = custom_site_jobs()
+        jobs += cj
+        ok_boards += ck
+    if CFG["sources"]["hn_whos_hiring"]:
+        hj = hn_whos_hiring()
+        jobs += hj
+        ok_boards += list({j["board"] for j in hj})
 
     # Drop duplicates (same company + title seen through two sources). Prefer the board copy.
     dedup = {}
@@ -683,6 +993,86 @@ def fit_score(j):
         age = (NOW - t).days
         s += 2 if age <= 3 else 1 if age <= 7 else 0
     return s
+
+
+NEWS_FEEDS = ["https://techcrunch.com/category/venture/feed/",
+              "https://techcrunch.com/category/startups/feed/",
+              "https://news.crunchbase.com/feed/"]
+RAISE = re.compile(r"\b(raises?|raised|funding|seed|series [a-c]|secures|lands|nabs|bags|closes)\b", re.I)
+
+
+def funding_news():
+    """Startups that just announced funding, in your areas, from the last ~2 days."""
+    import xml.etree.ElementTree as ET
+    from email.utils import parsedate_to_datetime
+    interests = re.compile(CFG["news"]["interest_regex"], re.I)
+    sent = load_json("news_sent.json", {})
+    items = {}
+    for feed in NEWS_FEEDS:
+        r = get(feed)
+        if not r:
+            log(f"News: could not read {feed}")
+            continue
+        try:
+            root = ET.fromstring(r.content)
+        except ET.ParseError:
+            continue
+        for it in root.iter("item"):
+            title = (it.findtext("title") or "").strip()
+            link = (it.findtext("link") or "").strip()
+            desc = html_to_text(it.findtext("description") or "")
+            try:
+                when = parsedate_to_datetime(it.findtext("pubDate") or "")
+            except (TypeError, ValueError):
+                when = None
+            if not link or link in sent or (when and NOW - when > dt.timedelta(days=2)):
+                continue
+            if RAISE.search(title) and interests.search(f"{title} {desc}"):
+                items[link] = {"title": title, "url": link, "note": desc[:220]}
+    out = list(items.values())[:CFG["news"]["max_items"]]
+    for x in out:
+        sent[x["url"]] = TODAY
+    cutoff = (NOW - dt.timedelta(days=30)).date().isoformat()
+    save_json("news_sent.json", {k: v for k, v in sent.items() if v >= cutoff})
+    log(f"News: {len(out)} funding stories in your areas")
+    return out
+
+
+SEASON = {"winter": 0, "spring": 1, "summer": 2, "fall": 3}
+
+
+def new_yc_companies():
+    """Companies from the newest YC batches that match your interests (each shown once)."""
+    data = as_json(get(YC_DATA)) or []
+    shown = load_json("yc_shown.json", {})
+
+    def bkey(b):
+        m = re.match(r"(\w+)\s+(\d{4})", b or "")
+        return (int(m.group(2)), SEASON.get(m.group(1).lower(), 0)) if m else (0, 0)
+
+    batches = sorted({c.get("batch") for c in data if c.get("batch")}, key=bkey, reverse=True)[:2]
+    want = set(CFG["gems"]["interest_tags"])
+    picks = [c for c in data if c.get("batch") in batches and c["slug"] not in shown
+             and (set(c.get("tags") or []) | set(c.get("industries") or [])) & want
+             and set(c.get("regions") or []) & set(CFG["yc"]["regions"])]
+    picks = picks[:CFG["news"]["max_items"]]
+    for c in picks:
+        shown[c["slug"]] = TODAY
+    save_json("yc_shown.json", shown)
+    log(f"New YC companies: {len(picks)} from {batches}")
+    return [{"title": f"{c['name']} ({c.get('batch')}, {c.get('team_size') or '?'} people)",
+             "url": c.get("url") or f"https://www.ycombinator.com/companies/{c['slug']}",
+             "note": c.get("one_liner", "")} for c in picks]
+
+
+def links_html(heading, items):
+    if not items:
+        return ""
+    rows = "".join(
+        f"<li style='margin:6px 0'><a href='{html.escape(x['url'])}'>{html.escape(x['title'])}</a>"
+        + (f"<br><span style='color:#777;font-size:13px'>{html.escape(x['note'])}</span>" if x.get("note") else "")
+        + "</li>" for x in items)
+    return f"<h3 style='margin:18px 0 6px'>{html.escape(heading)} ({len(items)})</h3><ul>{rows}</ul>"
 
 
 def digest():
@@ -729,12 +1119,19 @@ def digest():
     cutoff = (NOW - dt.timedelta(days=45)).date().isoformat()
     save_json("digest_sent.json", {k: v for k, v in already.items() if v >= cutoff})
     write_csv("digest_full_ranked.csv", kept)
-    if not top_all:
+    news = funding_news() if CFG["news"]["funding_news"] else []
+    new_yc = new_yc_companies() if CFG["news"]["new_yc_companies"] else []
+    if not (top_all or news or new_yc):
         return
     html_body, text_body, total = build_email([("Best open jobs for you today, ranked", top),
                                                ("YC startups worth a look (⭐ gems first)", yc_top)])
     html_body = html_body.replace("new jobs for you", "top picks from all open jobs", 1)
-    send_email(f"Today's top {len(top)} jobs + {len(yc_top)} YC startups for you", html_body, text_body)
+    extra = links_html("💰 Just raised money: reach out before they post jobs", news) + \
+        links_html("🆕 Newest YC companies in your areas", new_yc)
+    html_body = html_body[:-len("</div>")] + extra + "</div>"
+    text_body += "\n\n" + "\n".join(f"{x['title']} | {x['url']}" for x in news + new_yc)
+    send_email(f"Today's top {len(top)} jobs + {len(yc_top)} YC startups"
+               + (f" + {len(news)} funding news" if news else ""), html_body, text_body)
     push(f"Today's top {total} jobs", "\n".join(f"{j['company']}: {j['title']}" for j in top[:10]))
 
 
@@ -754,7 +1151,8 @@ def main():
     for j in jobs:
         fresh = j["id"] not in seen
         seen[j["id"]] = TODAY
-        if not fresh or first_run or j["board"] not in seeded:
+        # HN threads are monthly and most posts land on day 1, so they're not baselined (the 3-day age cap applies).
+        if not fresh or first_run or (j["board"] not in seeded and not j["board"].startswith("hn:")):
             continue
         t = parse_time(j.get("posted_at"))
         if t and NOW - t > OLD_AFTER:
@@ -799,9 +1197,11 @@ def main():
     order = lambda j: (not j.get("sponsor"), not j.get("newgrad"), -j.get("gem_score", 0))
     newgrad = sorted([j for j in kept if j.get("newgrad")], key=order)
     yc = sorted([j for j in kept if j.get("yc_batch") and not j.get("newgrad")], key=order)
-    rest = sorted([j for j in kept if not j.get("newgrad") and not j.get("yc_batch")],
+    hn = sorted([j for j in kept if j["source"] == "HN Who's Hiring" and not j.get("newgrad")], key=order)
+    rest = sorted([j for j in kept if not j.get("newgrad") and not j.get("yc_batch") and j not in hn],
                   key=lambda j: (not j.get("mine"), not j.get("sponsor")))
-    sections = [("New-grad roles", newgrad), ("YC startups", yc), ("Company career sites", rest)]
+    sections = [("New-grad roles", newgrad), ("YC startups", yc), ("Company career sites", rest),
+                ("Startups hiring on Hacker News (click to read the post; apply as it says)", hn)]
     cap, trimmed = CFG["notify"]["max_jobs_per_email"], []
     for name, js in sections:
         trimmed.append((name, js[:max(cap, 0)]))
