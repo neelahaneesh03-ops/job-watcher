@@ -24,12 +24,25 @@ job_board_directory = true    # ~12k company boards on Greenhouse / Ashby / Leve
 yc = true                     # every hiring YC company (finds their job board automatically)
 workday_every_n_runs = 2      # Workday is slow; check it every 2nd run (every 2 hours)
 workday_queries = ["software engineer", "machine learning"]
+custom_sites = true           # Amazon, Microsoft, Google, Apple, Meta career sites
+custom_queries = ["machine learning", "software engineer", "computer vision", "new grad"]
+hn_whos_hiring = true         # monthly "Ask HN: Who is hiring?" thread (many small/new startups)
+discover_more = true          # find job boards for companies in companies.csv + the Simplify list
+discovery_per_run = 500       # companies to look up per run (results are remembered)
+rediscover_days = 14
 
 
 [yc]
 regions = ["United States of America", "America / Canada", "Remote", "Fully Remote"]
 rediscover_days = 7
 check_yc_page_for_unknown = true
+
+[news]
+# Added to the daily morning email.
+funding_news = true           # startups that just raised money (TechCrunch + Crunchbase News)
+new_yc_companies = true       # newest YC batch companies in your areas
+max_items = 10
+interest_regex = '''\b(ai|artificial intelligence|machine learning|robot\w*|computer vision|vision|autonomous|drone\w*|biotech|drug|pharma|therapeutic\w*|protein|genomic\w*|health\w*|medical|hardware|chip\w*|semiconductor|llm|agent\w*|defense tech|physical ai)\b'''
 
 [gems]
 interest_tags = ["AI", "Machine Learning", "Generative AI", "Computer Vision", "Robotics",
