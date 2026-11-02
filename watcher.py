@@ -201,6 +201,24 @@ def min_years(text):
     return min(vals) if vals else None
 
 
+SENIOR_SIGNALS = [re.compile(x, re.I) for x in [
+    r"\b(looking for|seeking|hiring|need)\s+(an?\s+)?(highly\s+)?(experienced|seasoned|senior)\b",
+    r"\bhelp\s+(us\s+)?lead\b|\blead\s+(this|the)\s+(effort|team|initiative)",
+    r"\byou(['’]ve|\s+have)\s+led\b",
+    r"\bproven\s+track\s+record\b",
+    r"\bextensive\s+(professional\s+|industry\s+)?experience\b",
+    r"\bseasoned\b",
+    r"\bmentor(ing|ship)?\s+(junior|other|less experienced)\b",
+    r"\btechnical\s+(leadership|lead)\b|\btech\s+lead\b",
+    r"\b(significant|substantial|deep)\s+experience\b",
+    r"\bfrom\s+design\s+through\s+production\b",
+]]
+
+
+def senior_signals(text):
+    return sum(1 for rx in SENIOR_SIGNALS if rx.search(text))
+
+
 def html_to_text(s):
     if not s:
         return ""
@@ -952,6 +970,10 @@ def check_job(j):
         return j, "no sponsorship"
     if j["years"] is not None and j["years"] > CFG["experience"]["max_required_years"]:
         return j, "too many years"
+    # No number given, but written for senior people ("experienced engineer to help lead...").
+    lim = CFG["experience"].get("max_senior_signals", 1)
+    if text and j["years"] is None and senior_signals(text) > lim:
+        return j, "senior wording"
     if text and (SPONSOR_FRIENDLY.search(text) or OPT_FRIENDLY.search(text)):
         j["sponsor"] = True
     return j, None
