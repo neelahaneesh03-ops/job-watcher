@@ -12,6 +12,8 @@ exclude_regex = '''((?<!technical )\bstaff\b|\bprincipal\b|\bdirector\b|\bmanage
 max_required_years = 3
 # If no years are stated, drop jobs with 2+ senior phrases ("experienced engineer", "help lead", "you've led"...).
 max_senior_signals = 1
+# Drop jobs that require a PhD ("PhD preferred" or "PhD or MS" are kept).
+drop_phd_required = true
 
 [sponsorship]
 # Drop jobs whose description rules out visa sponsorship / requires citizenship or clearance.
