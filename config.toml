@@ -2,14 +2,16 @@
 
 [roles]
 # Kept if the TITLE matches include_regex and does NOT match exclude_regex (case-insensitive).
-include_regex = '''\b(machine learning|ml|ai|artificial intelligence|deep learning|computer vision|vision|perception|robotics?|autonomy|software engineer(ing)?|software developer|swe|backend|back[- ]end|full[- ]?stack|founding engineer|member of technical staff|applied scientist|research engineer|ml ?ops|inference|llm|data scientist|platform engineer|new grad|university grad)\b'''
+include_regex = '''\b(machine learning|ml|ai\s*/\s*ml|ai\s+(engineer|engineering|research|researcher|scientist|developer|software|platform|infrastructure|systems?|applications?)|(applied|generative|gen|conversational|physical)\s+ai|artificial intelligence engineer|deep learning|computer vision|vision|perception|robotics?|autonomy|software engineer(ing|s)?|software developers?|swe|backend|back[- ]end|full[- ]?stack|founding engineers?|member of technical staff|applied scientists?|research engineers?|ml ?ops|inference|llm|data scientists?|platform engineers?|new grad|university grad)\b'''
 # Senior-level titles are dropped because you want roles needing under 3 years.
-exclude_regex = '''((?<!technical )\bstaff\b|\bprincipal\b|\bdirector\b|\bmanager\b|\bhead of\b|\bvp\b|vice president|\bdistinguished\b|\bintern(ship)?\b|\bco-?op\b|\bsales\b|\bmarketing\b|\brecruit|\baccount executive\b|\bsolutions? engineer\b|\bsupport\b|\bsenior\b|\bsr\.?\b|\blead\b|\barchitect\b|\b(iii|iv|v)\b|\bL[5-9]\b|\bfellow\b)'''
+exclude_regex = '''((?<!technical )\bstaff\b|\bprincipal\b|\bdirector\b|\bmanager\b|\bhead of\b|\bvp\b|vice president|\bdistinguished\b|\bintern(ship)?\b|\bco-?op\b|\bsales\b|\bmarketing\b|\brecruit|\baccount executive\b|\bsolutions? engineer\b|\bsupport\b|\bsenior\b|\bsr\.?\b|\blead\b|\barchitect\b|\b(iii|iv|v|vi)\b|\b(engineer|developer|scientist|swe|sde)\s*,?\s*[3-9]\b|\blevel\s*[3-9]\b|\bL[5-9]\b|\bfellow\b|part[- ]time|\btrainee\b|apprentice|\bcontract(or)?\b|freelance|\bdesigner\b)'''
 
 [experience]
 # Reads each new job's description. Drops it if the SMALLEST "N+ years" it asks for is above this.
-# You have 3 years at Accenture + an MS, so 3 is also reasonable here.
-max_required_years = 3
+# 2 = junior roles only (0-2 years). Set to 3 to also get "3+ years" roles.
+max_required_years = 2
+# Also drop if the posting mentions this many years ANYWHERE (catches "at least 9 years" + "3+ years of AWS").
+hard_cap_years = 6
 # If no years are stated, drop jobs with 2+ senior phrases ("experienced engineer", "help lead", "you've led"...).
 max_senior_signals = 1
 # Drop jobs that require a PhD ("PhD preferred" or "PhD or MS" are kept).
