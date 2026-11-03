@@ -137,18 +137,56 @@ NON_US = re.compile(
     r"dubai|saudi|qatar|pakistan|turkey|istanbul|ukraine|romania|bulgaria|serbia|greece)\b", re.I)
 
 
+US_STATE = re.compile(
+    r",\s*(AL|AK|AZ|AR|CA|CO|CT|DE|DC|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|"
+    r"NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY)\b|\b(san francisco|bay area|new york|nyc|seattle|"
+    r"boston|austin|los angeles|chicago|denver|atlanta|miami|tampa|dallas|houston|san jose|san diego|"
+    r"palo alto|mountain view|menlo park|sunnyvale|cupertino|redmond|pittsburgh|philadelphia|"
+    r"washington,?\s*d\.?c|raleigh|salt lake|phoenix|portland, or|minneapolis|detroit|nashville)\b")
+FOREIGN_TITLE = re.compile(r"desenvolvedor|desarrollador|ingeniero|engenheir|pessoa |entwickler|d[eé]veloppeur|"
+                           r"ing[eé]nieur|programador|analista|s[eê]nior|sviluppatore", re.I)
+
+
 def title_ok(t):
+    if FOREIGN_TITLE.search(t or ""):
+        return False
     return bool(t) and bool(INC.search(t)) and not EXC.search(t)
 
 
+NON_US_MORE = re.compile(
+    r"\b(hungary|budapest|slovakia|bratislava|jordan|amman|croatia|zagreb|lithuania|vilnius|latvia|riga|"
+    r"estonia|tallinn|slovenia|ljubljana|belarus|minsk|russia|moscow|kazakhstan|almaty|armenia|yerevan|"
+    r"tbilisi|morocco|casablanca|tunisia|ghana|accra|sri lanka|colombo|bangladesh|dhaka|nepal|kathmandu|"
+    r"uruguay|montevideo|ecuador|quito|guatemala|venezuela|cyprus|malta|luxembourg|iceland|lebanon|beirut|"
+    r"kuwait|bahrain|oman|ethiopia|addis|uganda|kampala|rwanda|kigali|tanzania|cameroon|senegal|dakar|"
+    r"zimbabwe|cairo|riyadh|jeddah|abu dhabi|doha|karachi|lahore|islamabad|hanoi|ho chi minh|bangkok|"
+    r"kuala lumpur|jakarta|auckland|wellington|bogot[aá]|medell[ií]n|lima|buenos aires|guadalajara|"
+    r"monterrey|s[aã]o paulo|rio de janeiro|brasil|remoto|teletrabajo|sant cugat|catalonia|catalu[nñ]a|"
+    r"valencia|seville|porto|krak[oó]w|wroc[lł]aw|gda[nń]sk|pozna[nń]|cluj|bucharest|sofia|belgrade|"
+    r"kyiv|kiev|lviv|kharkiv|odesa|tbilisi|baku|manila|cebu|taguig|makati|shenzhen|hangzhou|chengdu|"
+    r"guangzhou|osaka|busan|edinburgh|manchester|glasgow|belfast|cambridge,?\s*uk|oxford,?\s*uk|"
+    r"ottawa|calgary|edmonton|waterloo|quebec|qu[eé]bec|halifax|winnipeg|brussels|antwerp|rotterdam|"
+    r"the hague|eindhoven|hamburg|frankfurt|cologne|stuttgart|lyon|toulouse|nice|geneva|lausanne|basel|"
+    r"oslo|helsinki|gothenburg|aarhus|athens|thessaloniki|nicosia|valletta|reykjavik)\b", re.I)
+# Workday-style country codes at the start, e.g. "ESP - CT - Sant Cugat", "IND-Bangalore", "PRT - Lisbon"
+ISO_PREFIX = re.compile(r"^\s*([A-Z]{3})\s*[-,]")
+
+
 def loc_ok(loc):
+    """US or US-remote only. A location mentioning a foreign place counts as foreign unless it also
+    clearly names the US ("Remote/Ukraine" -> foreign; "Boston, MA; London" -> kept)."""
     if CFG["location"]["allow_non_us"] or not loc:
         return True
-    for p in re.split(r"[;|/•]| or |\n", loc):
-        p = p.strip()
-        if not p or US_EXPLICIT.search(p) or not NON_US.search(p):
-            return True
-    return False
+    us = bool(US_EXPLICIT.search(loc) or US_STATE.search(loc))
+    foreign = bool(NON_US.search(loc) or NON_US_MORE.search(loc))
+    for part in re.split(r"[;|•\n]", loc):
+        m = ISO_PREFIX.match(part)
+        if m:
+            if m.group(1) == "USA":
+                us = True
+            else:
+                foreign = True
+    return us or not foreign
 
 
 OFF_TARGET = re.compile(r"biologist|chemist|physicist|clinician|physician|pharmacist|\bnurse\b|\btutor\b|"
@@ -195,6 +233,16 @@ YEARS = re.compile(
 
 LABEL_YEARS = re.compile(r"\bexperience\s*[:\-]?\s*(\d{1,2})\s*\+?\s*(?:-\s*\d{1,2}\s*)?years?", re.I)
 YC_ANY_EXP = re.compile(r"\bexperience\s*[:\-]?\s*(any|new grads? ok|0\s*-\s*1)", re.I)
+
+
+def max_years(text):
+    vals = [int(m.group(1)) for m in LABEL_YEARS.finditer(text)]
+    for m in YEARS.finditer(text):
+        a = m.group(1).lower()
+        n = WORDNUM.get(a) if not a.isdigit() else int(a)
+        if n is not None and n <= 20:
+            vals.append(n)
+    return max(vals) if vals else None
 
 
 def min_years(text):
@@ -469,6 +517,9 @@ def json_text(x):
     return ""
 
 
+WD_URL = re.compile(r"https?://([\w-]+)\.(wd\d+)\.myworkdayjobs\.com/(?:[a-z]{2}-[A-Z]{2}/)?([^/]+)(/job/.+?)/?(?:\?.*)?$")
+
+
 def describe(j):
     """Fetch a job's description text (only called for a handful of new jobs per run)."""
     if j.get("_desc"):
@@ -476,6 +527,11 @@ def describe(j):
     url = j.get("_desc_url")
     if not url:
         return ""
+    m = WD_URL.match(url)
+    if m and "/wday/cxs/" not in url:
+        tenant, shard, site, path = m.group(1), m.group(2), m.group(3), m.group(4)
+        url = f"https://{tenant}.{shard}.myworkdayjobs.com/wday/cxs/{tenant}/{site}{path}"
+        j["_kind"] = "workday"
     r = get(url, headers={"Accept": "application/json"} if j.get("_kind") == "workday" else None)
     if not r:
         return ""
@@ -645,8 +701,22 @@ def hn_whos_hiring():
             company = parts[0][:60] if parts else "HN post"
             is_loc = lambda p: re.search(r"(?i:remote|onsite|on-site|in-office|hybrid|\bsf\b|nyc|\busa\b|united states)|,\s?[A-Z]{2}\b", p)
             loc = " ".join(p for p in parts[1:] if is_loc(p))
-            role = " | ".join(p for p in parts[1:] if not is_loc(p) and not re.search(
-                r"full[- ]?time|part[- ]?time|contract|\$|visa|https?://", p, re.I))[:160]
+            # Role = the parts of the header line that name a role you want; skip posts that only hire senior.
+            junior_ok = re.compile(r"junior|new grad|entry|early career|all levels|any level|mid", re.I)
+            role_parts = [p for p in parts[1:] if INC.search(p) and not is_loc(p)]
+            if role_parts:
+                keep = [p for p in role_parts if not EXC.search(p) or junior_ok.search(p)]
+                if not keep:
+                    continue
+                role = " | ".join(keep)[:160]
+            else:
+                m = INC.search(text)
+                if not m:
+                    continue
+                snip = text[max(0, m.start() - 40):m.end() + 60]
+                if EXC.search(snip) and not junior_ok.search(snip):
+                    continue
+                role = "…" + snip.strip() + "…"
             job = {"id": f"hn:{h['objectID']}", "title": role or first[:160],
                    "company": company, "location": loc, "posted_at": h.get("created_at"),
                    "url": f"https://news.ycombinator.com/item?id={h['objectID']}", "_desc": text,
@@ -920,6 +990,8 @@ def badges(j):
         b.append("★ your list")
     if j.get("years") is not None:
         b.append(f"{j['years']}+ yrs")
+    if j.get("checked") is False:
+        b.append("⚠️ couldn't read description: check years/sponsorship")
     if j.get("team_size"):
         b.append(f"{j['team_size']} people")
     return b
@@ -1000,10 +1072,18 @@ DROPPED = []  # new jobs removed by the description checks this run (saved to dr
 def check_job(j):
     """Read the description; return (job, reason_dropped or None)."""
     text = describe(j)
+    if not loc_ok(j.get("location", "")):
+        return j, "outside US"
     j["years"] = min_years(text) if text else None
+    j["checked"] = bool(text)
     if text and CFG["sponsorship"]["drop_no_sponsorship"] and NO_SPONSOR.search(text):
         return j, "no sponsorship"
     if j["years"] is not None and j["years"] > CFG["experience"]["max_required_years"]:
+        return j, "too many years"
+    # "At least 9 years..." in the basic requirements, even if "3+ years of AWS" appears lower down.
+    top = max_years(text) if text else None
+    if top is not None and top >= CFG["experience"].get("hard_cap_years", 6):
+        j["years"] = top
         return j, "too many years"
     if text and CFG["experience"].get("drop_phd_required", True) and phd_required(text):
         return j, "PhD required"
