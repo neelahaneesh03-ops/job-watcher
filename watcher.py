@@ -217,7 +217,7 @@ NO_SPONSOR = re.compile(
     r"|requires?\s+(u\.?\s?s\.?|united\s+states)\s+citizenship"
     r"|green\s+card\s+holders?\s+only|citizens?\s+(or|and)\s+(green\s+card|permanent\s+resident)"
     r"|(active|current|ability\s+to\s+(obtain|maintain)|eligib\w+\s+(to|for))\s+[^.]{0,30}(security\s+)?clearance"
-    r"|citizen\s*/\s*visa\s+only"
+    r"|citizen\s*/\s*visa\s+only|\bno\s+visas?\b|\bvisa:\s*no\b"
     r"|\bitar\b|\bu\.?\s?s\.?\s+persons?\b", re.I)
 SPONSOR_FRIENDLY = re.compile(
     r"\bh-?1b\b|visa\s+sponsorship\s+(is\s+)?(available|provided|offered)"
@@ -677,6 +677,14 @@ def meta_jobs(q):
     return out
 
 
+HN_JUNIOR = re.compile(
+    r"new[- ]?grads?|recent grad|university grad|college grad|entry[- ]level|early[- ]career|\bjunior\b|"
+    r"\bjr\.?\s+(engineer|developer|swe)|all (experience |seniority )?levels|any level|every level|"
+    r"\b0\s*[-–+]\s*[1-3]\s*(\+\s*)?years|\b[12]\+?\s*years|\bgrads?\b|\bopt\b|\bstem opt\b", re.I)
+HN_VISA = re.compile(r"(^|\|)\s*visa(\s+sponsorship)?\s*(\||$)|\bvisa\s+(sponsorship\s+)?(available|ok|yes|friendly)\b"
+                     r"|\bwill sponsor\b|\bsponsor(s|ing)?\s+visas?\b", re.I)
+
+
 def hn_whos_hiring():
     """Monthly 'Ask HN: Who is hiring?' thread — lots of small/new startups post only here."""
     s = as_json(get("https://hn.algolia.com/api/v1/search_by_date",
@@ -701,6 +709,9 @@ def hn_whos_hiring():
             company = parts[0][:60] if parts else "HN post"
             is_loc = lambda p: re.search(r"(?i:remote|onsite|on-site|in-office|hybrid|\bsf\b|nyc|\busa\b|united states)|,\s?[A-Z]{2}\b", p)
             loc = " ".join(p for p in parts[1:] if is_loc(p))
+            # Most HN posts are for experienced engineers; keep only posts that say they hire junior people.
+            if CFG["sources"].get("hn_require_junior", True) and not HN_JUNIOR.search(text):
+                continue
             # Role = the parts of the header line that name a role you want; skip posts that only hire senior.
             junior_ok = re.compile(r"junior|new grad|entry|early career|all levels|any level|mid", re.I)
             role_parts = [p for p in parts[1:] if INC.search(p) and not is_loc(p)]
@@ -720,7 +731,8 @@ def hn_whos_hiring():
             job = {"id": f"hn:{h['objectID']}", "title": role or first[:160],
                    "company": company, "location": loc, "posted_at": h.get("created_at"),
                    "url": f"https://news.ycombinator.com/item?id={h['objectID']}", "_desc": text,
-                   "source": "HN Who's Hiring", "board": f"hn:{story}"}
+                   "source": "HN Who's Hiring", "board": f"hn:{story}",
+                   "sponsor": bool(HN_VISA.search(first) or HN_VISA.search(text))}
             # The first line lists several roles; match on the whole post instead of a single title.
             us_ok = not NON_US.search(first) or re.search(
                 r"\b(us|usa|united states|sf|san francisco|bay area|new york|nyc|seattle|boston|austin)\b", first, re.I)
