@@ -52,6 +52,15 @@ new_yc_companies = true       # newest YC batch companies in your areas
 max_items = 10
 interest_regex = '''\b(ai|artificial intelligence|machine learning|robot\w*|computer vision|vision|autonomous|drone\w*|biotech|drug|pharma|therapeutic\w*|protein|genomic\w*|health\w*|medical|hardware|chip\w*|semiconductor|llm|agent\w*|defense tech|physical ai)\b'''
 
+[research]
+# Research + tech news added to the daily morning email.
+enabled = true
+max_items = 5
+# "Trending papers" and "HN stories" are kept if they touch these topics.
+topic_regex = '''\b(vision|visual|image|video|segment\w*|detect\w*|3d|depth|point cloud|gaussian splat\w*|nerf|diffusion|vlm|multimodal|robot\w*|manipulat\w*|embodied|autonomous|driving|drone|slam|pose|tracking|anomal\w*|medical imag\w*|microscop\w*|pathology|protein|drug|molecul\w*|edge|on-device|quantiz\w*|distill\w*|efficient)\b'''
+# "Papers in your niche" (arXiv cs.CV + cs.RO) must match one of these.
+niche_regex = '''\b(anomaly detection|industrial (inspection|anomaly)|defect detection|patchcore|mvtec|microscop\w*|cell (segmentation|imaging)|histopatholog\w*|edge (deployment|devices?|ai)|on-device|tinyml|quantiz\w*|tensorrt|jetson|real-time (detection|segmentation)|robot(ic)? (manipulation|grasping|learning)|visuomotor|imitation learning|drug discovery|protein)\b'''
+
 [gems]
 interest_tags = ["AI", "Machine Learning", "Generative AI", "Computer Vision", "Robotics",
                  "Hard Tech", "Biotech", "Drug Discovery", "Healthcare", "Health Tech",
