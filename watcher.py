@@ -1164,6 +1164,98 @@ def fit_score(j):
     return s
 
 
+# ---------------------------------------------------------------- research + tech news (daily email)
+def trending_papers():
+    """Today's most-upvoted papers on Hugging Face Daily Papers that touch vision / robotics / your niche."""
+    rx = re.compile(CFG["research"]["topic_regex"], re.I)
+    shown = load_json("papers_shown.json", {})
+    out = []
+    for back in range(0, 3):  # today, or the last day that has papers (weekends are empty)
+        day = (NOW - dt.timedelta(days=back)).date().isoformat()
+        data = as_json(get("https://huggingface.co/api/daily_papers", params={"date": day}))
+        if isinstance(data, list) and data:
+            break
+    for x in data if isinstance(data, list) else []:
+        p = x.get("paper") or {}
+        pid, title, summ = p.get("id"), (p.get("title") or x.get("title") or "").strip(), p.get("summary") or ""
+        if not pid or pid in shown or not rx.search(f"{title} {summ}"):
+            continue
+        out.append({"title": title, "url": f"https://huggingface.co/papers/{pid}",
+                    "note": f"▲{p.get('upvotes', 0)} · " + re.sub(r"\s+", " ", summ)[:230] + "…",
+                    "_up": p.get("upvotes", 0), "_id": pid})
+    out.sort(key=lambda x: -x["_up"])
+    return out
+
+
+def niche_papers():
+    """New arXiv papers in computer vision / robotics matching your specific interests."""
+    import xml.etree.ElementTree as ET
+    rx = re.compile(CFG["research"]["niche_regex"], re.I)
+    out = []
+    for cat in ("cs.CV", "cs.RO"):
+        r = get(f"https://rss.arxiv.org/rss/{cat}")
+        if not r:
+            continue
+        try:
+            root = ET.fromstring(r.content)
+        except ET.ParseError:
+            continue
+        for it in root.iter("item"):
+            title = (it.findtext("title") or "").strip()
+            desc = html_to_text(it.findtext("description") or "")
+            ann = (it.findtext("{http://arxiv.org/schemas/atom}announce_type") or "new").strip()
+            if ann != "new" or not rx.search(f"{title} {desc}"):
+                continue
+            abstract = re.sub(r"^.*?Abstract:\s*", "", desc)
+            link = (it.findtext("link") or "").strip()
+            if any(o["_id"] == link for o in out):
+                continue  # cross-listed in both categories
+            out.append({"title": title, "url": (it.findtext("link") or "").strip(),
+                        "note": abstract[:230] + "…", "_id": (it.findtext("link") or "").strip()})
+    return out
+
+
+def hn_ai_stories():
+    """Most-discussed AI / vision / robotics stories on Hacker News in the last day."""
+    d = as_json(get("https://hn.algolia.com/api/v1/search",
+                    params={"tags": "story", "numericFilters": f"created_at_i>{int(NOW.timestamp()) - 86400},points>80",
+                            "hitsPerPage": 100}))
+    rx = re.compile(CFG["research"]["topic_regex"] + r"|\b(ai|llm|model|gpu|nvidia|openai|anthropic)\b", re.I)
+    out = []
+    for h in (d or {}).get("hits") or []:
+        t = h.get("title") or ""
+        if rx.search(t):
+            out.append({"title": f"{t} ({h.get('points', 0)} pts)",
+                        "url": h.get("url") or f"https://news.ycombinator.com/item?id={h['objectID']}",
+                        "note": f"Discussion: https://news.ycombinator.com/item?id={h['objectID']}",
+                        "_up": h.get("points", 0), "_id": h["objectID"]})
+    out.sort(key=lambda x: -x["_up"])
+    return out
+
+
+def research_sections():
+    if not CFG["research"]["enabled"]:
+        return ""
+    shown = load_json("papers_shown.json", {})
+    n = CFG["research"]["max_items"]
+    sections = []
+    for name, fn in (("📄 Trending vision & robotics papers today", trending_papers),
+                     ("🔬 New papers in your niche (arXiv)", niche_papers),
+                     ("📰 Top AI stories on Hacker News", hn_ai_stories)):
+        try:
+            items = [x for x in fn() if x["_id"] not in shown][:n]
+        except Exception as e:  # never let news break the job email
+            log(f"{name}: error {e}")
+            items = []
+        log(f"{name}: {len(items)}")
+        for x in items:
+            shown[x["_id"]] = TODAY
+        sections.append(links_html(name, items))
+    cutoff = (NOW - dt.timedelta(days=30)).date().isoformat()
+    save_json("papers_shown.json", {k: v for k, v in shown.items() if v >= cutoff})
+    return "".join(sections)
+
+
 NEWS_FEEDS = ["https://techcrunch.com/category/venture/feed/",
               "https://techcrunch.com/category/startups/feed/",
               "https://news.crunchbase.com/feed/"]
@@ -1293,13 +1385,14 @@ def digest():
     write_csv("dropped_this_run.csv", DROPPED)
     news = funding_news() if CFG["news"]["funding_news"] else []
     new_yc = new_yc_companies() if CFG["news"]["new_yc_companies"] else []
-    if not (top_all or news or new_yc):
+    research = research_sections()
+    if not (top_all or news or new_yc or research):
         return
     html_body, text_body, total = build_email([("Best open jobs for you today, ranked", top),
                                                ("YC startups worth a look (⭐ gems first)", yc_top)])
     html_body = html_body.replace("new jobs for you", "top picks from all open jobs", 1)
     extra = links_html("💰 Just raised money: reach out before they post jobs", news) + \
-        links_html("🆕 Newest YC companies in your areas", new_yc)
+        links_html("🆕 Newest YC companies in your areas", new_yc) + research
     html_body = html_body[:-len("</div>")] + extra + "</div>"
     text_body += "\n\n" + "\n".join(f"{x['title']} | {x['url']}" for x in news + new_yc)
     send_email(f"Today's top {len(top)} jobs + {len(yc_top)} YC startups"
