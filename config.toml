@@ -33,6 +33,7 @@ workday_queries = ["software engineer", "machine learning"]
 custom_sites = true           # Amazon, Microsoft, Google, Apple, Meta career sites
 custom_queries = ["machine learning", "software engineer", "computer vision", "new grad"]
 hn_whos_hiring = true         # monthly "Ask HN: Who is hiring?" thread (many small/new startups)
+hn_require_junior = true      # only HN posts that mention new grad / junior / entry level / all levels
 discover_more = true          # find job boards for companies in companies.csv + the Simplify list
 discovery_per_run = 400       # companies to look up per run (results are remembered)
 discovery_seconds = 150       # max time per run spent looking up new companies
