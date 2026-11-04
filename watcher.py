@@ -1345,7 +1345,7 @@ def digest():
     pool = []
     for j in jobs:
         t = parse_time(j.get("posted_at"))
-        if j["id"] in already or (t and (NOW - t).days > 30):
+        if j["id"] in already or (t and (NOW - t).days > CFG["digest"]["max_age_days"]):
             continue
         j["mine"] = mine.match(j["company"])
         pool.append(j)
@@ -1363,7 +1363,15 @@ def digest():
             else:
                 kept.append(j)
     kept.sort(key=fit_score, reverse=True)
-    top = kept[:n]
+    # At most N jobs per company, so one startup can't fill the list.
+    per, top = {}, []
+    for j in kept:
+        c = "".join(tokens(j["company"]))
+        if per.get(c, 0) < CFG["digest"]["max_per_company"]:
+            per[c] = per.get(c, 0) + 1
+            top.append(j)
+        if len(top) >= n:
+            break
     # Always include a separate YC startup section, best gems first.
     yc_n = int(os.environ.get("DIGEST_YC_SIZE", "10"))
     top_ids = {j["id"] for j in top}
