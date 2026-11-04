@@ -160,6 +160,8 @@ NON_US_MORE = re.compile(
     r"uruguay|montevideo|ecuador|quito|guatemala|venezuela|cyprus|malta|luxembourg|iceland|lebanon|beirut|"
     r"kuwait|bahrain|oman|ethiopia|addis|uganda|kampala|rwanda|kigali|tanzania|cameroon|senegal|dakar|"
     r"zimbabwe|cairo|riyadh|jeddah|abu dhabi|doha|karachi|lahore|islamabad|hanoi|ho chi minh|bangkok|"
+    r"vadodara|ahmedabad|kolkata|jaipur|kochi|cochin|coimbatore|trivandrum|thiruvananthapuram|indore|nagpur|"
+    r"chandigarh|mohali|lucknow|bhubaneswar|visakhapatnam|vizag|mysore|mysuru|mangalore|surat|nashik|"
     r"kuala lumpur|jakarta|auckland|wellington|bogot[aá]|medell[ií]n|lima|buenos aires|guadalajara|"
     r"monterrey|s[aã]o paulo|rio de janeiro|brasil|remoto|teletrabajo|sant cugat|catalonia|catalu[nñ]a|"
     r"valencia|seville|porto|krak[oó]w|wroc[lł]aw|gda[nń]sk|pozna[nń]|cluj|bucharest|sofia|belgrade|"
@@ -539,6 +541,9 @@ def describe(j):
         info = (as_json(r) or {}).get("jobPostingInfo") or {}
         if info.get("location"):
             j["location"] = info["location"]
+        country = (info.get("country") or {}).get("descriptor") if isinstance(info.get("country"), dict) else None
+        if country:  # Workday often lists only a city ("Vadodara 73 East Ave"); the country settles it
+            j["location"] = f"{j.get('location', '')}, {country}".strip(", ")
         return html_to_text(info.get("jobDescription", ""))
     if "json" in (getattr(r, "headers", {}).get("Content-Type") or "") or r.text.lstrip()[:1] in "{[":
         data = as_json(r)
@@ -1422,8 +1427,12 @@ def main():
 
     new = []
     for j in jobs:
-        fresh = j["id"] not in seen
+        # Same job can arrive from two sources with different IDs (company board + Simplify list),
+        # so also remember it by company + title.
+        ck = "ct:" + "".join(tokens(j["company"])) + "|" + re.sub(r"\W+", "", j["title"].lower())
+        fresh = j["id"] not in seen and ck not in seen
         seen[j["id"]] = TODAY
+        seen[ck] = TODAY
         # HN threads are monthly and most posts land on day 1, so they're not baselined (the 3-day age cap applies).
         if not fresh or first_run or (j["board"] not in seeded and not j["board"].startswith("hn:")):
             continue
