@@ -4,7 +4,7 @@
 # Kept if the TITLE matches include_regex and does NOT match exclude_regex (case-insensitive).
 include_regex = '''\b(machine learning|ml|ai\s*/\s*ml|ai\s+(engineer|engineering|research|researcher|scientist|developer|software|platform|infrastructure|systems?|applications?)|(applied|generative|gen|conversational|physical)\s+ai|artificial intelligence engineer|deep learning|computer vision|vision|perception|robotics?|autonomy|software engineer(ing|s)?|software developers?|swe|backend|back[- ]end|full[- ]?stack|founding engineers?|member of technical staff|applied scientists?|research engineers?|ml ?ops|inference|llm|data scientists?|platform engineers?)\b'''
 # Senior-level titles are dropped because you want roles needing under 3 years.
-exclude_regex = '''((?<!technical )\bstaff\b|\bprincipal\b|\bdirector\b|\bmanager\b|\bhead of\b|\bvp\b|vice president|\bdistinguished\b|\bintern(ship)?\b|\bco-?op\b|\bsales\b|\bmarketing\b|\brecruit|\baccount executive\b|\bsolutions? engineer\b|\bsupport\b|\bsenior\b|\bsr\.?\b|\blead\b|\barchitect\b|\b(iii|iv|v|vi)\b|\b(engineer|developer|scientist|swe|sde)\s*,?\s*[3-9]\b|\blevel\s*[3-9]\b|\bL[5-9]\b|\bfellow\b|\b[slp]mts\b|part[- ]time|\btrainee\b|apprentice|\bcontract(or)?\b|freelance|\bdesigner\b)'''
+exclude_regex = '''((?<!technical )\bstaff\b|\bprincipal\b|\bdirector\b|\bmanager\b|\bhead of\b|\bvp\b|vice president|\bdistinguished\b|\bintern(ship)?\b|\bco-?op\b|\bsales\b|\bmarketing\b|\brecruit|\baccount executive\b|\bsolutions? engineer\b|\bsupport\b|\bsenior\b|\bsr\.?\b|\blead\b|\barchitect\b|\b(iii|iv|v|vi)\b|\b(engineer|developer|scientist|swe|sde)\s*,?\s*[3-9]\b|\blevel\s*[3-9]\b|\bL[5-9]\b|\bfellow\b|\b[slp]mts\b|part[- ]time|\btrainee\b|apprentice|\bdesigner\b)'''
 
 [experience]
 # Reads each new job's description. Drops it if the SMALLEST "N+ years" it asks for is above this.
@@ -33,6 +33,7 @@ workday_queries = ["software engineer", "machine learning"]
 custom_sites = true           # Amazon, Microsoft, Google, Apple, Meta career sites
 custom_queries = ["machine learning", "software engineer", "computer vision", "new grad"]
 hn_whos_hiring = true         # monthly "Ask HN: Who is hiring?" thread (many small/new startups)
+remote_boards = true          # Remotive + Himalayas remote job boards (many contract roles)
 hn_require_junior = true      # only HN posts that mention new grad / junior / entry level / all levels
 discover_more = true          # find job boards for companies in companies.csv + the Simplify list
 discovery_per_run = 400       # companies to look up per run (results are remembered)
@@ -44,6 +45,10 @@ rediscover_days = 14
 regions = ["United States of America", "America / Canada", "Remote", "Fully Remote"]
 rediscover_days = 7
 check_yc_page_for_unknown = true
+
+[contract]
+# Contract jobs get their own email section with W-2 / C2C tags. false = drop them.
+include = true
 
 [digest]
 # The daily Top 25 picks from open jobs posted within this many days.
