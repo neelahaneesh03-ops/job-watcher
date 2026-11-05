@@ -353,6 +353,7 @@ def ashby(slug):
         if j.get("isRemote") and "remote" not in loc.lower():
             loc = f"{loc} (Remote)".strip()
         job = {"id": f"ashby:{j.get('id')}", "title": j.get("title", ""), "location": loc,
+               "emp_type": j.get("employmentType") or "",
                "posted_at": j.get("publishedAt"), "url": j.get("jobUrl") or j.get("applyUrl") or "",
                "_desc": j.get("descriptionPlain") or html_to_text(j.get("descriptionHtml"))}
         if wanted(job):
@@ -385,7 +386,7 @@ def lever(slug):
         cat = j.get("categories") or {}
         ts = j.get("createdAt")
         lists = " ".join(f"{x.get('text', '')} {html_to_text(x.get('content', ''))}" for x in (j.get("lists") or []))
-        job = {"id": f"lever:{j.get('id')}", "title": j.get("text", ""),
+        job = {"id": f"lever:{j.get('id')}", "title": j.get("text", ""), "emp_type": cat.get("commitment") or "",
                "location": cat.get("location") or "; ".join(cat.get("allLocations") or []),
                "posted_at": dt.datetime.fromtimestamp(ts / 1000, dt.timezone.utc).isoformat() if ts else None,
                "url": j.get("hostedUrl", ""),
@@ -491,6 +492,7 @@ def smartrecruiters(token):
             if loc.get("remote"):
                 where = f"{where} (Remote)".strip()
             job = {"id": f"sr:{j.get('id')}", "title": j.get("name", ""), "location": where,
+                   "emp_type": (j.get("typeOfEmployment") or {}).get("label", "") if isinstance(j.get("typeOfEmployment"), dict) else "",
                    "posted_at": j.get("releasedDate"),
                    "url": f"https://jobs.smartrecruiters.com/{token}/{j.get('id')}",
                    "_desc_url": j.get("ref") or f"https://api.smartrecruiters.com/v1/companies/{token}/postings/{j.get('id')}"}
@@ -750,6 +752,57 @@ def hn_whos_hiring():
     return out
 
 
+REMOTE_READ = set()
+
+
+def remote_boards():
+    """Remotive + Himalayas: remote job boards that publish their listings openly."""
+    out = []
+    d = as_json(get("https://remotive.com/api/remote-jobs", params={"category": "software-dev", "limit": 300}))
+    for j in (d or {}).get("jobs") or []:
+        out.append({"id": f"remotive:{j.get('id')}", "title": j.get("title", ""), "company": j.get("company_name", ""),
+                    "location": j.get("candidate_required_location") or "Remote", "emp_type": j.get("job_type", ""),
+                    "posted_at": j.get("publication_date"), "url": j.get("url", ""),
+                    "_desc": html_to_text(j.get("description", "")), "source": "Remotive", "board": "remotive"})
+    d = as_json(get("https://himalayas.app/jobs/api", params={"limit": 100}))
+    for j in (d or {}).get("jobs") or []:
+        ts = j.get("pubDate")
+        locs = j.get("locationRestrictions") or []
+        out.append({"id": f"himalayas:{j.get('guid') or j.get('applicationLink')}", "title": j.get("title", ""),
+                    "company": j.get("companyName", ""), "location": "; ".join(locs) if locs else "Remote (worldwide)",
+                    "emp_type": j.get("employmentType", ""),
+                    "posted_at": dt.datetime.fromtimestamp(ts, dt.timezone.utc).isoformat() if isinstance(ts, (int, float)) else ts,
+                    "url": j.get("applicationLink") or "", "_desc": html_to_text(j.get("description", "")),
+                    "source": "Himalayas", "board": "himalayas"})
+    REMOTE_READ.clear()
+    REMOTE_READ.update(j["board"] for j in out)
+    keep = [j for j in out if wanted(j)]
+    log(f"Remote boards (Remotive + Himalayas): {len(out)} read, {len(keep)} matching")
+    return keep
+
+
+CONTRACT_TITLE = re.compile(r"\bcontract(or)?\b|contract[- ]to[- ]hire|\bc2h\b|\bc2c\b|\b1099\b|\bw-?2\b|"
+                            r"\btemp(orary)?\b|\bfreelance\b|\b\d+\s*[- ]?(month|mo)s?\b", re.I)
+CONTRACT_DESC = re.compile(r"contract[- ]to[- ]hire|\bc2c\b|corp[- ]to[- ]corp|\b1099\b|\bw-?2\s+(only|contract|basis)|"
+                           r"(this is|this|a)\s+(an?\s+)?\d*\s*[- ]?(month\s+)?contract\s+(role|position|opportunity|assignment)|"
+                           r"\bcontract\s+(duration|length|term)\b|duration:\s*\d+\s*(months?|weeks?)", re.I)
+
+
+def contract_info(j, text=""):
+    """Tag contract jobs. Returns a label or None."""
+    if re.search(r"contract|temp|freelance", j.get("emp_type") or "", re.I) or CONTRACT_TITLE.search(j["title"]) \
+            or (text and CONTRACT_DESC.search(text)):
+        blob = f"{j['title']} {j.get('emp_type', '')} {text}"
+        if re.search(r"\bc2c\b|corp[- ]to[- ]corp|\b1099\b|freelance", blob, re.I):
+            return "📝 contract · ⚠️ C2C/1099: usually not allowed on STEM OPT"
+        if re.search(r"\bw-?2\b", blob, re.I):
+            return "📝 contract · W-2"
+        if re.search(r"contract[- ]to[- ]hire|\bc2h\b", blob, re.I):
+            return "📝 contract-to-hire"
+        return "📝 contract"
+    return None
+
+
 CUSTOM_SITES = {"Amazon": amazon_jobs, "Microsoft": microsoft_jobs, "Google": google_jobs,
                 "Apple": apple_jobs, "Meta": meta_jobs}
 
@@ -997,6 +1050,8 @@ def ago(iso):
 
 def badges(j):
     b = []
+    if j.get("contract"):
+        b.append(j["contract"])
     if j.get("sponsor"):
         b.append("🛂 mentions sponsorship/OPT")
     if j.get("gem"):
@@ -1110,6 +1165,9 @@ def check_job(j):
         return j, "senior wording"
     if text and (SPONSOR_FRIENDLY.search(text) or OPT_FRIENDLY.search(text)):
         j["sponsor"] = True
+    j["contract"] = contract_info(j, text)
+    if j["contract"] and not CFG["contract"]["include"]:
+        return j, "contract"
     return j, None
 
 
@@ -1127,6 +1185,10 @@ def collect_jobs(run_no):
         cj, ck = custom_site_jobs()
         jobs += cj
         ok_boards += ck
+    if CFG["sources"].get("remote_boards", True):
+        rj = remote_boards()
+        jobs += rj
+        ok_boards += sorted(REMOTE_READ)
     if CFG["sources"]["hn_whos_hiring"]:
         hj = hn_whos_hiring()
         jobs += hj
@@ -1482,13 +1544,16 @@ def main():
         return
 
     order = lambda j: (not j.get("sponsor"), not j.get("newgrad"), -j.get("gem_score", 0))
+    contract = sorted([j for j in kept if j.get("contract")], key=lambda j: "C2C" in j["contract"])
+    kept = [j for j in kept if not j.get("contract")]
     newgrad = sorted([j for j in kept if j.get("newgrad")], key=order)
     yc = sorted([j for j in kept if j.get("yc_batch") and not j.get("newgrad")], key=order)
     hn = sorted([j for j in kept if j["source"] == "HN Who's Hiring" and not j.get("newgrad")], key=order)
     rest = sorted([j for j in kept if not j.get("newgrad") and not j.get("yc_batch") and j not in hn],
                   key=lambda j: (not j.get("mine"), not j.get("sponsor")))
     sections = [("New-grad roles", newgrad), ("YC startups", yc), ("Company career sites", rest),
-                ("Startups hiring on Hacker News (click to read the post; apply as it says)", hn)]
+                ("Startups hiring on Hacker News (click to read the post; apply as it says)", hn),
+                ("📝 Contract jobs (check with USF's international office before accepting)", contract)]
     cap, trimmed = CFG["notify"]["max_jobs_per_email"], []
     for name, js in sections:
         trimmed.append((name, js[:max(cap, 0)]))
